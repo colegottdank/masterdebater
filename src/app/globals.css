@@ -1,8 +1,17 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #1a0f1f;
+  --foreground: #ffffff;
+  --cartman-red: #dc2626;
+  --cartman-yellow: #fbbf24;
+  --cartman-brown: #92400e;
+  --kyle-green: #16a34a;
+  --kyle-orange: #ea580c;
+  --stan-blue: #2563eb;
+  --stan-red: #dc2626;
+  --butters-cyan: #06b6d4;
+  --randy-purple: #9333ea;
 }
 
 @theme inline {
@@ -12,15 +21,283 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+body {
+  background: 
+    url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Cpath d='M20 20h10v10H20zM40 40h10v10H40zM60 10h10v10H60zM10 60h10v10H10z'/%3E%3C/g%3E%3C/svg%3E"),
+    radial-gradient(circle at 25% 75%, rgba(139, 69, 19, 0.2) 0%, transparent 40%),
+    radial-gradient(circle at 75% 25%, rgba(220, 38, 38, 0.1) 0%, transparent 50%),
+    linear-gradient(135deg, #1a0f1f 0%, #2d1b3d 50%, #1f0f2a 100%);
+  color: var(--foreground);
+  font-family: 'Comic Sans MS', Arial, sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+.south-park-title {
+  font-family: 'Impact', 'Arial Black', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  text-shadow: 
+    4px 4px 0px #000,
+    -2px -2px 0px #000,
+    2px -2px 0px #000,
+    -2px 2px 0px #000,
+    0 0 20px rgba(251, 191, 36, 0.5);
+  transform: rotate(-2deg);
+  filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.5));
+}
+
+.cartman-gradient {
+  background: 
+    linear-gradient(135deg, var(--cartman-red) 0%, var(--cartman-yellow) 30%, var(--cartman-red) 70%, #fbbf24 100%);
+  box-shadow: 
+    0 8px 32px rgba(220, 38, 38, 0.4),
+    0 4px 16px rgba(251, 191, 36, 0.3),
+    inset 0 2px 0px rgba(255, 255, 255, 0.2),
+    inset 0 -2px 0px rgba(0, 0, 0, 0.2);
+  border: 3px solid #000;
+}
+
+.debate-glow {
+  box-shadow: 
+    0 0 30px rgba(251, 191, 36, 0.8),
+    0 0 60px rgba(251, 191, 36, 0.4),
+    0 0 90px rgba(251, 191, 36, 0.2),
+    inset 0 2px 0px rgba(255, 255, 255, 0.1);
+  border: 4px solid #fbbf24;
+  position: relative;
+}
+
+.character-card {
+  transform: rotate(var(--rotation, 0deg));
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  border: 4px solid #000;
+  box-shadow: 
+    6px 6px 0px #000,
+    0 0 20px rgba(0, 0, 0, 0.5);
+  position: relative;
+  overflow: visible;
+  isolation: isolate;
+  transform-origin: center;
+  will-change: transform;
+}
+
+.character-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at center, rgba(251, 191, 36, 0.2), transparent);
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+
+.character-card:hover::before {
+  opacity: 1;
+}
+
+.character-card:hover {
+  box-shadow: 
+    6px 6px 0px #000,
+    0 0 25px rgba(251, 191, 36, 0.5);
+  outline: 3px solid #fbbf24;
+  outline-offset: -3px;
+  z-index: 20;
+}
+
+.character-card:nth-child(1) { --rotation: -3deg; }
+.character-card:nth-child(2) { --rotation: 2deg; }
+.character-card:nth-child(3) { --rotation: -1deg; }
+.character-card:nth-child(4) { --rotation: 2.5deg; }
+.character-card:nth-child(5) { --rotation: -2deg; }
+
+.comic-bubble {
+  position: relative;
+  background: white;
+  color: #000;
+  border: 4px solid #000;
+  border-radius: 25px;
+  transform: rotate(-1deg);
+  box-shadow: 5px 5px 0px #000;
+}
+
+.comic-bubble::before {
+  content: '';
+  position: absolute;
+  bottom: -20px;
+  left: 40px;
+  width: 0;
+  height: 0;
+  border: 20px solid transparent;
+  border-top-color: #000;
+  border-bottom: 0;
+  margin-left: -20px;
+}
+
+.comic-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -15px;
+  left: 40px;
+  width: 0;
+  height: 0;
+  border: 16px solid transparent;
+  border-top-color: white;
+  border-bottom: 0;
+  margin-left: -16px;
+}
+
+.podcast-mic {
+  font-size: 4rem;
+  filter: drop-shadow(0 5px 10px rgba(0, 0, 0, 0.5));
+  animation: float 2s ease-in-out infinite;
+}
+
+.messy-banner {
+  background: repeating-linear-gradient(
+    45deg,
+    #fbbf24 0px,
+    #fbbf24 10px,
+    #dc2626 10px,
+    #dc2626 20px
+  );
+  border: 3px solid #000;
+  transform: rotate(-1deg);
+  box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.3);
+}
+
+.messy-banner span {
+  text-shadow: 
+    2px 2px 0px #000,
+    -1px -1px 0px #000,
+    1px -1px 0px #000,
+    -1px 1px 0px #000,
+    0 0 10px rgba(0, 0, 0, 0.8);
+  font-weight: 900;
+  color: #ffffff;
+}
+
+.on-air-sign {
+  background: #dc2626;
+  color: white;
+  border: 3px solid #000;
+  border-radius: 10px;
+  padding: 8px 16px;
+  font-weight: bold;
+  text-transform: uppercase;
+  transform: rotate(3deg);
+  box-shadow: 3px 3px 0px #000;
+  animation: pulse-glow 1.5s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(var(--rotation, 0deg)); }
+  50% { transform: translateY(-8px) rotate(var(--rotation, 0deg)); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { 
+    box-shadow: 3px 3px 0px #000, 0 0 20px rgba(220, 38, 38, 0.5); 
+  }
+  50% { 
+    box-shadow: 3px 3px 0px #000, 0 0 40px rgba(220, 38, 38, 0.8); 
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@keyframes shake {
+  0%, 100% { transform: translateX(0) rotate(var(--rotation, 0deg)); }
+  25% { transform: translateX(-3px) rotate(var(--rotation, 0deg)); }
+  75% { transform: translateX(3px) rotate(var(--rotation, 0deg)); }
+}
+
+.shake-animation {
+  animation: shake 0.3s ease-in-out infinite;
+}
+
+.chaos-scatter {
+  position: relative;
+}
+
+.chaos-scatter::before {
+  content: '💻';
+  position: absolute;
+  top: 15%;
+  right: 5%;
+  font-size: 2rem;
+  opacity: 0.2;
+  transform: rotate(15deg);
+  z-index: 1;
+}
+
+.chaos-scatter::after {
+  content: '🎮';
+  position: absolute;
+  bottom: 25%;
+  left: 3%;
+  font-size: 1.5rem;
+  opacity: 0.2;
+  transform: rotate(-10deg);
+  z-index: 1;
+}
+
+/* Additional scattered bedroom items */
+.bedroom-mess {
+  position: relative;
+}
+
+.bedroom-mess::before {
+  content: '🍕';
+  position: absolute;
+  top: 30%;
+  left: 8%;
+  font-size: 1.8rem;
+  opacity: 0.15;
+  transform: rotate(-25deg);
+  z-index: 1;
+}
+
+.bedroom-mess::after {
+  content: '🎯';
+  position: absolute;
+  bottom: 40%;
+  right: 10%;
+  font-size: 1.6rem;
+  opacity: 0.2;
+  transform: rotate(20deg);
+  z-index: 1;
+}
+
+.podcast-equipment {
+  position: relative;
+}
+
+.podcast-equipment::before {
+  content: '🎧';
+  position: absolute;
+  top: 10px;
+  right: 100px;
+  font-size: 1.5rem;
+  opacity: 0.4;
+  transform: rotate(-5deg);
+}
+
+.podcast-equipment::after {
+  content: '📻';
+  position: absolute;
+  bottom: 10px;
+  left: 50px;
+  font-size: 1.3rem;
+  opacity: 0.3;
+  transform: rotate(8deg);
+}
+
+/* Improved gradients for more depth */
+.cartman-room-bg {
+  background: 
+    radial-gradient(circle at 30% 70%, rgba(139, 69, 19, 0.3) 0%, transparent 40%),
+    radial-gradient(circle at 70% 30%, rgba(75, 85, 99, 0.2) 0%, transparent 50%),
+    linear-gradient(135deg, #1a0f1f 0%, #2d1b3d 30%, #1f0f2a 70%, #1a0f1f 100%);
 }
