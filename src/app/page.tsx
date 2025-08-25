@@ -1,33 +1,33 @@
 import { SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
 import Link from 'next/link';
-import { characters, getCharacterAvatar } from '@/lib/characters';
+import { characters } from '@/lib/characters';
+import ScatteredDecorations from '@/components/ScatteredDecorations';
+import CharacterCard from '@/components/CharacterCard';
+import LiveBanner from '@/components/LiveBanner';
+import ComicBubble from '@/components/ComicBubble';
 
 export default function Home() {
   return (
     <div className="min-h-screen relative chaos-scatter bedroom-mess cartman-room-bg">
       {/* Messy Header Banner */}
-      <div className="messy-banner p-2 text-center relative">
-        <span className="font-black text-white text-sm tracking-wider">
-          🔴 LIVE NOW 🔴 CARTMAN&apos;S MASTER DEBATE PODCAST 🔴 EPISODE #420 🔴
-        </span>
-        <div className="absolute top-2 right-6 z-10">
-          <div className="on-air-sign text-sm">ON AIR</div>
-        </div>
-      </div>
+      <LiveBanner 
+        text="🔴 LIVE NOW 🔴 CARTMAN'S MASTER DEBATE PODCAST 🔴 EPISODE #420 🔴"
+        showOnAir={true}
+      />
       
       {/* Scattered Bedroom Items */}
-      <div className="absolute top-20 left-8 text-3xl opacity-10 transform rotate-12 z-0">🧸</div>
-      <div className="absolute top-32 right-12 text-2xl opacity-15 transform -rotate-15 z-0">⚡</div>
-      <div className="absolute top-1/3 left-16 text-xl opacity-20 transform rotate-45 z-0">🌮</div>
-      <div className="absolute bottom-32 left-20 text-2xl opacity-10 transform -rotate-30 z-0">🎲</div>
-      <div className="absolute bottom-40 right-24 text-xl opacity-15 transform rotate-25 z-0">🍔</div>
-      <div className="absolute top-1/2 right-8 text-lg opacity-25 transform -rotate-8 z-0">📺</div>
+      <ScatteredDecorations type="bedroom" />
 
       {/* Navigation */}
-      <nav className="absolute top-16 right-6 z-20">
+      <nav className="absolute top-12 sm:top-16 right-2 sm:right-6 z-20 flex items-center gap-2 sm:gap-4">
+        <SignedIn>
+          <Link href="/history" className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-1 px-2 sm:py-2 sm:px-4 rounded-lg transition-all transform hover:rotate-1 border-2 border-black text-xs sm:text-sm">
+            📚 My Debates
+          </Link>
+        </SignedIn>
         <SignedOut>
           <SignInButton mode="modal">
-            <button className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg transition-all transform hover:rotate-1 border-2 border-black">
+            <button className="bg-red-600 hover:bg-red-700 text-white font-bold py-1 px-3 sm:py-2 sm:px-6 rounded-lg transition-all transform hover:rotate-1 border-2 border-black text-sm">
               Sign In
             </button>
           </SignInButton>
@@ -40,21 +40,16 @@ export default function Home() {
       <div className="container mx-auto px-4 py-8">
         {/* Chaotic Title Section */}
         <div className="text-center relative mb-8">
-          <div className="absolute top-4 left-4 text-2xl opacity-30 transform -rotate-12">📻</div>
-          <div className="absolute top-8 right-8 text-xl opacity-40 transform rotate-12">🎧</div>
-          
-          <h1 className="text-5xl md:text-7xl font-black south-park-title mb-4">
+          <h1 className="text-4xl sm:text-5xl md:text-7xl font-black south-park-title mb-4">
             <span className="text-red-500">MASTER</span>
             <span className="text-yellow-400">DEBATER</span>
             <span className="text-white">.AI</span>
           </h1>
           
-          <div className="comic-bubble max-w-2xl mx-auto p-6 mb-6">
-            <p className="text-xl font-bold text-black">
-              &quot;I&apos;m not just the BEST debater... I&apos;m the MASTER debater! 
-              My mom bought me this microphone and everything!&quot;
-            </p>
-          </div>
+          <ComicBubble>
+            &quot;I&apos;m not just the BEST debater... I&apos;m the MASTER debater! 
+            My mom bought me this microphone and everything!&quot;
+          </ComicBubble>
         </div>
 
         {/* Podcast Studio Section */}
@@ -119,46 +114,23 @@ export default function Home() {
 
         {/* Character Selection - More Chaotic */}
         <div className="max-w-6xl mx-auto mb-12">
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6 py-12">
-            {characters.map((character, idx) => (
-              <div key={character.name} className="relative">
-                <div className={`character-card ${character.color} p-6 rounded-2xl text-center group relative z-10`}>
-                  {/* Crown for Cartman */}
-                  {character.name === 'Cartman' && (
-                    <div className="absolute -top-6 -right-4 text-4xl animate-bounce z-20">👑</div>
-                  )}
-                  
-                  <div className="mb-3 group-hover:scale-110 transition-transform flex justify-center">
-                    {getCharacterAvatar(character, 'xl')}
-                  </div>
-                  <div className="font-black text-xl mb-2">{character.name}</div>
-                  <div className="text-sm opacity-90 mb-2">{character.specialty}</div>
-                  <div className="text-xs font-bold bg-black/30 rounded px-2 py-1">
-                    W-L: {character.wins}
-                  </div>
-                  
-                  {/* Speech Bubble on Hover - positioned to not interfere */}
-                  <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-50 pointer-events-none">
-                    <div className="bg-white text-black text-sm font-bold p-3 rounded-lg border-2 border-black whitespace-nowrap">
-                      {character.quote}
-                      <div className="absolute top-full left-1/2 transform -translate-x-1/2">
-                        <div className="w-0 h-0 border-l-8 border-r-8 border-t-8 border-transparent border-t-black"></div>
-                        <div className="w-0 h-0 border-l-6 border-r-6 border-t-6 border-transparent border-t-white absolute -top-[2px] left-1/2 transform -translate-x-1/2"></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-6 py-6 sm:py-12">
+            {characters.map((character) => (
+              <CharacterCard 
+                key={character.id}
+                character={character}
+                showCrown={true}
+              />
             ))}
           </div>
         </div>
 
         {/* Battle Section */}
         <div className="relative max-w-4xl mx-auto mb-16">
-          <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
+          <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center">
             <SignedOut>
               <SignInButton mode="modal">
-                <button className="cartman-gradient text-white font-black text-2xl py-6 px-10 rounded-2xl hover:scale-110 transition-all transform hover:rotate-1 shadow-2xl border-4 border-black relative overflow-hidden group">
+                <button className="cartman-gradient text-white font-black text-lg sm:text-2xl py-4 px-6 sm:py-6 sm:px-10 rounded-2xl hover:scale-110 transition-all transform hover:rotate-1 shadow-2xl border-4 border-black relative overflow-hidden group">
                   <span className="relative z-10">START MASTER DEBATING!</span>
                   <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity"></div>
                 </button>
@@ -179,9 +151,11 @@ export default function Home() {
                 href="https://southpark.cc.com/episodes/9756cz/south-park-got-a-nut-season-27-ep-2" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="inline-block bg-gray-700 hover:bg-gray-600 text-white font-bold text-lg py-3 px-6 rounded-xl transition-all border-2 border-black transform hover:-rotate-1 cursor-pointer"
+                className="inline-block"
               >
-                👀 Watch Carnage
+                <button className="bg-gray-700 hover:bg-gray-600 text-white font-bold text-lg py-3 px-6 rounded-xl transition-all border-2 border-black transform hover:-rotate-1 cursor-pointer w-full">
+                  👀 Watch Carnage
+                </button>
               </Link>
             </div>
           </div>
@@ -242,11 +216,6 @@ export default function Home() {
               Inspired by South Park S27E02 &quot;Got a Nut&quot; • Powered by Claude Sonnet 4
             </p>
           </div>
-          
-          {/* Random Scattered Elements */}
-          <div className="absolute bottom-10 left-10 text-4xl opacity-20 transform rotate-45">🍗</div>
-          <div className="absolute bottom-20 right-16 text-2xl opacity-25 transform -rotate-12">📱</div>
-          <div className="absolute top-1/2 left-4 text-3xl opacity-15 transform rotate-12">🎮</div>
         </div>
       </div>
     </div>

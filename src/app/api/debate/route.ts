@@ -11,7 +11,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { character, topic, userArgument, previousMessages, saveDebate, stream } = await request.json();
+    const { character, topic, userArgument, previousMessages, stream, debateId } = await request.json();
 
     if (!character || !topic || !userArgument) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -42,26 +42,67 @@ export async function POST(request: Request) {
               }
             }
             
-            // Send final message
-            const finalData = JSON.stringify({ content: fullResponse, type: 'complete' });
-            controller.enqueue(encoder.encode(`data: ${finalData}\n\n`));
-            controller.close();
-
-            // Save debate if requested (after streaming completes)
-            if (saveDebate && previousMessages?.length > 0) {
+            // Send final message with debate ID if new debate
+            let savedDebateId = debateId;
+            
+            // Save or update debate
+            const allMessages = [...(previousMessages || []), 
+              { role: 'user', content: userArgument }, 
+              { role: 'ai', content: fullResponse }
+            ];
+            
+            if (!debateId) {
+              // This is a new debate, save it and get the ID
               const user = await currentUser();
               const username = user?.firstName || user?.username || 'Anonymous';
               
-              await d1.saveDebate({
+              // Get the debate ID from the referrer URL if this is a new debate
+              const referrer = request.headers.get('referer');
+              let extractedDebateId: string | undefined;
+              if (referrer) {
+                const match = referrer.match(/\/debate\/([a-f0-9-]+)/);
+                if (match) {
+                  extractedDebateId = match[1];
+                }
+              }
+              
+              const saveResult = await d1.saveDebate({
                 userId,
                 character,
                 topic,
-                messages: [...previousMessages, { role: 'user', content: userArgument }, { role: 'ai', content: fullResponse }]
+                messages: allMessages,
+                debateId: extractedDebateId  // Use the ID from the URL
               });
-
-              const userMessages = previousMessages.filter((m: any) => m.role === 'user').length;
+              
+              if (saveResult.debateId) {
+                savedDebateId = saveResult.debateId;
+              }
+              
+              const userMessages = allMessages.filter((m: { role: string; content: string }) => m.role === 'user').length;
               await d1.updateLeaderboard(userId, username, userMessages >= 3);
+            } else {
+              // Update existing debate with new messages
+              console.log('Updating existing debate:', debateId, 'with', allMessages.length, 'messages');
+              const saveResult = await d1.saveDebate({
+                userId,
+                character,
+                topic,
+                messages: allMessages,
+                debateId: debateId  // Update the existing debate
+              });
+              
+              if (!saveResult.success) {
+                console.error('Failed to update debate:', saveResult.error);
+              }
             }
+            
+            const finalData = JSON.stringify({ 
+              content: fullResponse, 
+              type: 'complete',
+              debateId: savedDebateId 
+            });
+            controller.enqueue(encoder.encode(`data: ${finalData}\n\n`));
+            controller.close();
           } catch (error) {
             console.error('Streaming error:', error);
             const errorData = JSON.stringify({ error: 'Streaming failed', type: 'error' });

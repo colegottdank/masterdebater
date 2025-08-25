@@ -12,7 +12,7 @@ const mockUser = {
   primaryEmailAddress: {
     emailAddress: 'test@example.com'
   },
-  imageUrl: 'https://via.placeholder.com/150'
+  imageUrl: 'https://img.clerk.com/preview.png?size=144&seed=test-user-123&initials=TU&isSquare=true&bgType=marble&bgColor=6B46C1&fgType=silhouette&fgColor=FFFFFF'
 };
 
 export function useUser() {

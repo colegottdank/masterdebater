@@ -33,6 +33,11 @@ body {
   overflow-x: hidden;
 }
 
+/* Ensure all buttons have pointer cursor */
+button {
+  cursor: pointer;
+}
+
 .south-park-title {
   font-family: 'Impact', 'Arial Black', sans-serif;
   text-transform: uppercase;
