@@ -34,8 +34,8 @@ export function useAvatar() {
       });
   }, [user]);
 
-  // Return custom avatar, Clerk avatar, or placeholder
-  const displayAvatar = avatarUrl || user?.imageUrl || 'https://img.clerk.com/preview.png?size=144&seed=anonymous&initials=AN&isSquare=true&bgType=marble&bgColor=6B46C1&fgType=silhouette&fgColor=FFFFFF';
+  // Return custom avatar or placeholder (NOT using Clerk's imageUrl to avoid personal images)
+  const displayAvatar = avatarUrl || 'https://img.clerk.com/preview.png?size=144&seed=anonymous&initials=AN&isSquare=true&bgType=marble&bgColor=6B46C1&fgType=silhouette&fgColor=FFFFFF';
 
   return {
     avatarUrl: displayAvatar,

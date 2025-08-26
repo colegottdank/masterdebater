@@ -5,6 +5,8 @@ const isPublicRoute = createRouteMatcher([
   '/sign-in(.*)',
   '/sign-up(.*)',
   '/api/webhook(.*)',
+  '/debate/(.*)',  // Allow public access to view specific debates
+  '/api/debate/(.*)',  // Allow API access to fetch debate data
 ])
 
 export default clerkMiddleware(async (auth, req) => {

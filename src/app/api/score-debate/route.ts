@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
+import { d1 } from '@/lib/d1';
+import { auth } from '@clerk/nextjs/server';
 
 // Initialize OpenRouter client using OpenAI SDK (server-side only)
 const openrouter = new OpenAI({
@@ -32,14 +34,23 @@ RESPONSE FORMAT (JSON):
 }`;
 
 export async function POST(request: NextRequest) {
+  const { userId } = await auth();
+  const { messages, characterName, debateId } = await request.json();
+  
   try {
-    const { messages, characterName } = await request.json();
     
-    if (!messages || !characterName) {
+    if (!messages || !characterName || !debateId) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
       );
+    }
+
+    // Check if debate already has a score
+    const existingDebate = await d1.getDebate(debateId);
+    if (existingDebate.success && existingDebate.debate?.score_data) {
+      console.log('Returning cached score for debate:', debateId);
+      return NextResponse.json(existingDebate.debate.score_data);
     }
     
     // Format debate for AI analysis
@@ -94,7 +105,7 @@ export async function POST(request: NextRequest) {
       roastLevel = 'dominated';
     }
     
-    return NextResponse.json({
+    const scoreData = {
       userScore: Math.round(result.userScore || 0),
       aiScore: Math.round(result.aiScore || 0),
       totalRounds,
@@ -103,13 +114,29 @@ export async function POST(request: NextRequest) {
       survivedRounds: totalRounds,
       verdict,
       roastLevel
-    });
+    };
+
+    // Save the score to the database if we have a user ID
+    if (userId && debateId) {
+      await d1.saveDebate({
+        userId,
+        debateId,
+        character: characterName.toLowerCase(),
+        topic: '', // Will be overridden by existing debate data
+        messages: [], // Will be overridden by existing debate data
+        userScore: scoreData.userScore,
+        aiScore: scoreData.aiScore,
+        scoreData
+      });
+      console.log('Score saved for debate:', debateId);
+    }
+
+    return NextResponse.json(scoreData);
     
   } catch (error) {
     console.error('AI scoring failed:', error);
     
-    // Fallback scoring if AI fails
-    const messages = (await request.json()).messages || [];
+    // Fallback scoring if AI fails (body was already read, so use the variables from above)
     const userMessages = messages.filter((m: any) => m.role === 'user');
     const aiMessages = messages.filter((m: any) => m.role === 'ai' || m.role === 'assistant');
     const totalRounds = Math.min(userMessages.length, aiMessages.length);
@@ -122,7 +149,7 @@ export async function POST(request: NextRequest) {
     const randomAiMessage = aiMessages[Math.floor(Math.random() * aiMessages.length)];
     const bestBurn = randomAiMessage?.content.split('.')[0] || "You got destroyed!";
     
-    return NextResponse.json({
+    const fallbackScore = {
       userScore,
       aiScore,
       totalRounds,
@@ -130,7 +157,24 @@ export async function POST(request: NextRequest) {
       bestBurnBy: 'ai',
       survivedRounds: totalRounds,
       verdict: "Got roasted hard",
-      roastLevel: 'roasted'
-    });
+      roastLevel: 'roasted' as const
+    };
+
+    // Save fallback score to database if we have a user ID
+    if (userId && debateId) {
+      await d1.saveDebate({
+        userId,
+        debateId,
+        character: characterName.toLowerCase(),
+        topic: '', // Will be overridden by existing debate data
+        messages: [], // Will be overridden by existing debate data
+        userScore: fallbackScore.userScore,
+        aiScore: fallbackScore.aiScore,
+        scoreData: fallbackScore
+      });
+      console.log('Fallback score saved for debate:', debateId);
+    }
+    
+    return NextResponse.json(fallbackScore);
   }
 }

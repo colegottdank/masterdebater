@@ -8,31 +8,34 @@ export async function GET(
 ) {
   try {
     const { debateId } = await params;
-    const { userId } = await auth();
+    const { userId } = await auth();  // May be null for non-authenticated users
     
     if (!debateId) {
       return NextResponse.json({ error: 'Debate ID required' }, { status: 400 });
     }
 
-    console.log('Fetching debate:', debateId, 'for user:', userId);
+    console.log('Fetching debate:', debateId, 'for user:', userId || 'unauthenticated');
     const result = await d1.getDebate(debateId);
     
     if (result.success && result.debate) {
-      // Check if current user owns this debate
-      const isOwner = userId && result.debate.user_id === userId;
+      // Check if current user owns this debate (only if authenticated)
+      const isOwner = userId ? result.debate.user_id === userId : false;
+      const isAuthenticated = !!userId;
       
       const messages = result.debate.messages as unknown[] | undefined;
       console.log('Debate found:', {
         id: debateId,
         owner: result.debate.user_id,
-        currentUser: userId,
+        currentUser: userId || 'unauthenticated',
         isOwner,
+        isAuthenticated,
         messageCount: messages?.length || 0
       });
       
       return NextResponse.json({ 
         debate: result.debate,
-        isOwner 
+        isOwner,
+        isAuthenticated 
       });
     } else {
       console.log('Debate not found:', debateId);

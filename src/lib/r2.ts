@@ -16,6 +16,18 @@ const PUBLIC_URL = process.env.NEXT_PUBLIC_R2_PUBLIC_URL || '';
 
 // Direct upload function using AWS SDK
 export async function uploadAvatar(buffer: ArrayBuffer, fileType: string) {
+  // Check if environment variables are set
+  if (!process.env.CLOUDFLARE_R2_ENDPOINT || !process.env.CLOUDFLARE_R2_ACCESS_KEY_ID || !process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY) {
+    console.error('R2 environment variables not configured:', {
+      hasEndpoint: !!process.env.CLOUDFLARE_R2_ENDPOINT,
+      hasAccessKey: !!process.env.CLOUDFLARE_R2_ACCESS_KEY_ID,
+      hasSecretKey: !!process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY,
+      hasBucket: !!BUCKET_NAME,
+      hasPublicUrl: !!PUBLIC_URL
+    });
+    throw new Error('R2 storage not configured. Please set environment variables.');
+  }
+
   // Generate unique UUID filename for security
   const uuid = crypto.randomUUID();
   const extension = fileType.split('/')[1] || 'jpg';
@@ -39,8 +51,13 @@ export async function uploadAvatar(buffer: ArrayBuffer, fileType: string) {
       key,
     };
   } catch (error) {
-    console.error('R2 upload error:', error);
-    throw new Error('Failed to upload to R2');
+    console.error('R2 upload error details:', {
+      error,
+      bucket: BUCKET_NAME,
+      endpoint: process.env.CLOUDFLARE_R2_ENDPOINT?.substring(0, 30) + '...',
+      hasCredentials: !!(process.env.CLOUDFLARE_R2_ACCESS_KEY_ID && process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY)
+    });
+    throw new Error(`Failed to upload to R2: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 

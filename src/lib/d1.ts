@@ -84,6 +84,7 @@ class D1Client {
         messages TEXT NOT NULL,
         user_score INTEGER DEFAULT 0,
         ai_score INTEGER DEFAULT 0,
+        score_data TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       );
 
@@ -118,6 +119,7 @@ class D1Client {
     messages: Array<{ role: string; content: string }>;
     userScore?: number;
     aiScore?: number;
+    scoreData?: any;
     debateId?: string;
   }) {
     // Use provided ID or generate a new one
@@ -128,12 +130,13 @@ class D1Client {
       userId: data.userId,
       character: data.character,
       topic: data.topic,
-      messageCount: data.messages.length
+      messageCount: data.messages.length,
+      hasScore: !!data.scoreData
     });
     
     const result = await this.query(
-      `INSERT OR REPLACE INTO debates (id, user_id, character, topic, messages, user_score, ai_score) 
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT OR REPLACE INTO debates (id, user_id, character, topic, messages, user_score, ai_score, score_data) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         debateId,
         data.userId,
@@ -141,7 +144,8 @@ class D1Client {
         data.topic,
         JSON.stringify(data.messages),
         data.userScore || 0,
-        data.aiScore || 0
+        data.aiScore || 0,
+        data.scoreData ? JSON.stringify(data.scoreData) : null
       ]
     );
     
@@ -167,10 +171,15 @@ class D1Client {
       if (debate.messages && typeof debate.messages === 'string') {
         debate.messages = JSON.parse(debate.messages);
       }
+      // Parse the JSON score_data field if it exists
+      if (debate.score_data && typeof debate.score_data === 'string') {
+        debate.score_data = JSON.parse(debate.score_data);
+      }
       console.log('Debate found:', {
         id: debate.id,
         userId: debate.user_id,
-        messageCount: Array.isArray(debate.messages) ? debate.messages.length : 0
+        messageCount: Array.isArray(debate.messages) ? debate.messages.length : 0,
+        hasScore: !!debate.score_data
       });
       return { success: true, debate };
     }
