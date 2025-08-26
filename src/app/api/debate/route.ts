@@ -17,6 +17,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
+    // Check message limit (now checks database for premium status)
+    if (debateId) {
+      const messageLimit = await d1.checkDebateMessageLimit(debateId);
+      if (!messageLimit.allowed) {
+        return NextResponse.json({ 
+          error: 'message_limit_exceeded',
+          message: `You've reached your limit of ${messageLimit.limit} messages per debate. Upgrade to premium for unlimited messages!`,
+          current: messageLimit.count,
+          limit: messageLimit.limit,
+          upgrade_required: true
+        }, { status: 429 });
+      }
+    }
+
     // If streaming is requested
     if (stream) {
       const anthropicStream = await generateDebateResponseStream(

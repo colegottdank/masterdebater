@@ -13,6 +13,7 @@ import CharacterCard from '@/components/CharacterCard';
 import LiveBanner from '@/components/LiveBanner';
 import TopicSelector from '@/components/TopicSelector';
 import ComicBubble from '@/components/ComicBubble';
+import RateLimitModal from '@/components/RateLimitModal';
 
 export default function DebatePage() {
   const { user } = useUser();
@@ -26,6 +27,20 @@ export default function DebatePage() {
   const [debateStarted, setDebateStarted] = useState(false);
   const [currentDebateId, setCurrentDebateId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  // Rate limit modal state
+  const [rateLimitModal, setRateLimitModal] = useState<{
+    isOpen: boolean;
+    type: 'debate' | 'message';
+    current: number;
+    limit: number;
+    message?: string;
+  }>({
+    isOpen: false,
+    type: 'debate',
+    current: 0,
+    limit: 3
+  });
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -61,7 +76,19 @@ export default function DebatePage() {
       } else {
         const error = await response.json();
         console.error('Failed to create debate:', error);
-        alert('Failed to create debate. Please try again.');
+        
+        // Handle rate limit error
+        if (response.status === 429 && error.error === 'debate_limit_exceeded') {
+          setRateLimitModal({
+            isOpen: true,
+            type: 'debate',
+            current: error.current,
+            limit: error.limit,
+            message: error.message
+          });
+        } else {
+          alert('Failed to create debate. Please try again.');
+        }
       }
     } catch (error) {
       console.error('Error creating debate:', error);
@@ -151,26 +178,38 @@ export default function DebatePage() {
   if (!debateStarted) {
     return (
       <div className="min-h-screen relative chaos-scatter bedroom-mess cartman-room-bg">
+        {/* Rate Limit Modal */}
+        <RateLimitModal
+          isOpen={rateLimitModal.isOpen}
+          onClose={() => setRateLimitModal(prev => ({ ...prev, isOpen: false }))}
+          type={rateLimitModal.type}
+          current={rateLimitModal.current}
+          limit={rateLimitModal.limit}
+          message={rateLimitModal.message}
+        />
         {/* Messy Header Banner */}
         <LiveBanner 
           text="🎯 DEBATE PREP ROOM 🎯 CARTMAN'S TRAINING FACILITY 🎯 GET READY TO BE DESTROYED 🎯"
           onAirText="PREP MODE"
         />
 
-        {/* User Avatar in Top Right */}
-        <nav className="absolute top-12 sm:top-16 right-2 sm:right-6 z-20">
-          <SignedIn>
-            <UserButton afterSignOutUrl="/" />
-          </SignedIn>
-        </nav>
-
         {/* Scattered Bedroom Items */}
         <ScatteredDecorations type="bedroom" hideOnMobile={false} />
 
         <div className="p-8 relative z-10">
-          <Link href="/" className="inline-block bg-yellow-400 hover:bg-yellow-300 text-black font-bold py-3 px-6 rounded-xl transition-all transform hover:rotate-1 border-4 border-black shadow-lg mb-8">
-            ← Escape Back to Studio
-          </Link>
+          <div className="flex justify-between items-start mb-8">
+            <Link href="/" className="inline-block bg-yellow-400 hover:bg-yellow-300 text-black font-bold py-3 px-6 rounded-xl transition-all transform hover:rotate-1 border-4 border-black shadow-lg">
+              ← Escape Back to Studio
+            </Link>
+            <div className="flex items-center gap-4">
+              <Link href="/history" className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl transition-all transform hover:-rotate-1 border-4 border-black shadow-lg">
+                📚 My Debates
+              </Link>
+              <SignedIn>
+                <UserButton afterSignOutUrl="/" />
+              </SignedIn>
+            </div>
+          </div>
           
           <div className="max-w-6xl mx-auto">
             {/* Chaotic Title */}

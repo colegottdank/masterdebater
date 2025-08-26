@@ -22,9 +22,15 @@ export default function HistoryPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCharacter, setSelectedCharacter] = useState<Character | 'all'>('all');
+  const [isManagingSubscription, setIsManagingSubscription] = useState(false);
+  const [subscription, setSubscription] = useState<{
+    isSubscribed: boolean;
+    currentPeriodEnd?: string;
+  }>({ isSubscribed: false });
 
   useEffect(() => {
     fetchDebates();
+    fetchSubscription();
   }, []);
 
   const fetchDebates = async () => {
@@ -38,6 +44,18 @@ export default function HistoryPage() {
       console.error('Error fetching debates:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchSubscription = async () => {
+    try {
+      const response = await fetch('/api/subscription');
+      if (response.ok) {
+        const data = await response.json();
+        setSubscription(data);
+      }
+    } catch (error) {
+      console.error('Error fetching subscription:', error);
     }
   };
 
@@ -64,6 +82,31 @@ export default function HistoryPage() {
     if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
     
     return date.toLocaleDateString();
+  };
+
+  const handleManageSubscription = async () => {
+    try {
+      setIsManagingSubscription(true);
+      const response = await fetch('/api/stripe/manage', {
+        method: 'POST',
+      });
+      
+      const data = await response.json();
+      
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        console.error('No portal URL received');
+        setIsManagingSubscription(false);
+      }
+    } catch (error) {
+      console.error('Error creating portal session:', error);
+      setIsManagingSubscription(false);
+    }
+  };
+
+  const handleUpgrade = () => {
+    router.push('/upgrade');
   };
 
   return (
@@ -106,6 +149,50 @@ export default function HistoryPage() {
                 &quot;Look at all these times you got DESTROYED! Want to try again, loser?&quot;
               </p>
             </div>
+          </div>
+
+          {/* Subscription Status Card */}
+          <div className={`mb-8 p-4 sm:p-6 rounded-2xl border-4 border-black shadow-lg transform ${subscription.isSubscribed ? '-rotate-1' : 'rotate-1'} ${subscription.isSubscribed ? 'bg-gradient-to-br from-yellow-500 to-yellow-600' : 'bg-gradient-to-br from-gray-600 to-gray-700'}`}>
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="text-4xl">{subscription.isSubscribed ? '👑' : '🔒'}</div>
+                <div>
+                  <h3 className="text-xl sm:text-2xl font-black text-white">
+                    {subscription.isSubscribed ? 'PREMIUM MASTER DEBATER' : 'FREE PEASANT'}
+                  </h3>
+                  <p className="text-sm font-bold text-white/90">
+                    {subscription.isSubscribed 
+                      ? 'Unlimited debates and messages - You rule!' 
+                      : `${debates.length}/3 debates used • Upgrade for unlimited`}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex gap-2">
+                {subscription.isSubscribed ? (
+                  <button
+                    onClick={handleManageSubscription}
+                    disabled={isManagingSubscription}
+                    className={`bg-white text-black font-black py-2 px-4 rounded-lg border-2 border-black ${isManagingSubscription ? 'opacity-50 cursor-wait' : 'hover:scale-105 cursor-pointer'} transition-all text-sm`}
+                  >
+                    {isManagingSubscription ? '⏳ LOADING...' : '⚙️ MANAGE'}
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleUpgrade}
+                    className="bg-red-600 hover:bg-red-700 text-white font-black py-2 px-4 rounded-lg border-2 border-black hover:scale-105 cursor-pointer transition-all text-sm"
+                  >
+                    💰 UPGRADE NOW
+                  </button>
+                )}
+              </div>
+            </div>
+            
+            {subscription.isSubscribed && subscription.currentPeriodEnd && (
+              <div className="mt-3 text-xs font-bold text-white/80">
+                Renews on {new Date(subscription.currentPeriodEnd).toLocaleDateString()}
+              </div>
+            )}
           </div>
 
           {/* Filters */}

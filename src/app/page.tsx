@@ -19,23 +19,24 @@ export default function Home() {
       <ScatteredDecorations type="bedroom" />
 
       {/* Navigation */}
-      <nav className="absolute top-12 sm:top-16 right-2 sm:right-6 z-20 flex items-center gap-2 sm:gap-4">
-        <SignedIn>
-          <Link href="/history" className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-1 px-2 sm:py-2 sm:px-4 rounded-lg transition-all transform hover:rotate-1 border-2 border-black text-xs sm:text-sm">
+      <SignedIn>
+        <nav className="absolute top-12 sm:top-16 right-2 sm:right-6 z-20 flex items-center gap-4">
+          <Link href="/history" className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl transition-all transform hover:-rotate-1 border-4 border-black shadow-lg">
             📚 My Debates
           </Link>
-        </SignedIn>
-        <SignedOut>
+          <UserButton afterSignOutUrl="/" />
+        </nav>
+      </SignedIn>
+      {/* Sign In button for signed out users */}
+      <SignedOut>
+        <nav className="absolute top-12 sm:top-16 right-2 sm:right-6 z-20">
           <SignInButton mode="modal">
             <button className="bg-red-600 hover:bg-red-700 text-white font-bold py-1 px-3 sm:py-2 sm:px-6 rounded-lg transition-all transform hover:rotate-1 border-2 border-black text-sm">
               Sign In
             </button>
           </SignInButton>
-        </SignedOut>
-        <SignedIn>
-          <UserButton afterSignOutUrl="/" />
-        </SignedIn>
-      </nav>
+        </nav>
+      </SignedOut>
 
       <div className="container mx-auto px-4 py-8">
         {/* Chaotic Title Section */}

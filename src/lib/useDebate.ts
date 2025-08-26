@@ -26,12 +26,22 @@ interface DebateState {
   debateEnded: boolean;
   debateScore: AIDebateScore | null;
   isScoringDebate: boolean;
+  showScoreModal: boolean;
+  
+  // Rate limiting
+  rateLimitError: {
+    show: boolean;
+    type: 'debate' | 'message';
+    current: number;
+    limit: number;
+    message?: string;
+  } | null;
 }
 
 interface UseDebateReturn {
   state: DebateState;
   refs: {
-    messagesEndRef: React.RefObject<HTMLDivElement>;
+    messagesEndRef: React.RefObject<HTMLDivElement | null>;
   };
   actions: {
     loadDebate: () => Promise<void>;
@@ -41,6 +51,8 @@ interface UseDebateReturn {
     copyShareLink: () => void;
     setShowShareToast: (show: boolean) => void;
     setDebateEnded: (ended: boolean) => void;
+    setShowScoreModal: (show: boolean) => void;
+    clearRateLimitError: () => void;
   };
 }
 
@@ -71,6 +83,10 @@ export function useDebate(debateId: string): UseDebateReturn {
     debateEnded: false,
     debateScore: null,
     isScoringDebate: false,
+    showScoreModal: false,
+    
+    // Rate limiting
+    rateLimitError: null,
   });
 
   // Auto-scroll to bottom when new messages arrive
@@ -103,9 +119,10 @@ export function useDebate(debateId: string): UseDebateReturn {
             isAuthenticated: data.isAuthenticated || false,
             isInitialized: true,
             isLoadingDebate: false,
-            // If debate is already scored, set the score and mark as ended
+            // If debate is already scored, set the score but don't auto-show modal
             debateEnded: hasScore,
             debateScore: hasScore ? data.debate.score_data : null,
+            showScoreModal: false, // Don't auto-show modal on page load
           }));
           
           // Log permission status
@@ -167,6 +184,27 @@ export function useDebate(debateId: string): UseDebateReturn {
           stream: true
         })
       });
+
+      // Check for rate limit error
+      if (!response.ok) {
+        const error = await response.json();
+        if (response.status === 429 && error.error === 'message_limit_exceeded') {
+          setState(prev => ({
+            ...prev,
+            messages: [...prev.messages.slice(0, -1)], // Remove the user message we just added
+            userInput: currentInput, // Restore the input
+            rateLimitError: {
+              show: true,
+              type: 'message',
+              current: error.current,
+              limit: error.limit,
+              message: error.message
+            }
+          }));
+          return;
+        }
+        throw new Error(error.error || 'Failed to send message');
+      }
 
       if (!response.body) {
         throw new Error('No response body');
@@ -236,7 +274,7 @@ export function useDebate(debateId: string): UseDebateReturn {
     
     // If we already have a score, just show it without recalculating
     if (state.debateScore) {
-      setState(prev => ({ ...prev, debateEnded: true }));
+      setState(prev => ({ ...prev, debateEnded: true, showScoreModal: true }));
       return;
     }
     
@@ -261,7 +299,8 @@ export function useDebate(debateId: string): UseDebateReturn {
           ...prev,
           debateScore: score,
           debateEnded: true,
-          isScoringDebate: false
+          isScoringDebate: false,
+          showScoreModal: true
         }));
       }
     } catch (error) {
@@ -295,6 +334,16 @@ export function useDebate(debateId: string): UseDebateReturn {
     setState(prev => ({ ...prev, debateEnded: ended }));
   }, []);
 
+  // Set show score modal state
+  const setShowScoreModal = useCallback((show: boolean) => {
+    setState(prev => ({ ...prev, showScoreModal: show }));
+  }, []);
+
+  // Clear rate limit error
+  const clearRateLimitError = useCallback(() => {
+    setState(prev => ({ ...prev, rateLimitError: null }));
+  }, []);
+
   return {
     state,
     refs: {
@@ -308,6 +357,8 @@ export function useDebate(debateId: string): UseDebateReturn {
       copyShareLink,
       setShowShareToast,
       setDebateEnded,
+      setShowScoreModal,
+      clearRateLimitError,
     },
   };
 }

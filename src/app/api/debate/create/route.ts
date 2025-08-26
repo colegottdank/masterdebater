@@ -11,6 +11,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Check rate limit (now checks database for premium status)
+    const debateLimit = await d1.checkUserDebateLimit(userId);
+    if (!debateLimit.allowed) {
+      return NextResponse.json({ 
+        error: 'debate_limit_exceeded',
+        message: `You've reached your limit of ${debateLimit.limit} debates. Upgrade to premium for unlimited debates!`,
+        current: debateLimit.count,
+        limit: debateLimit.limit,
+        upgrade_required: true
+      }, { status: 429 });
+    }
+
     const { character, topic, debateId } = await request.json();
 
     if (!character || !topic || !debateId) {

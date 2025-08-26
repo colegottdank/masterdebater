@@ -119,7 +119,7 @@ class D1Client {
     messages: Array<{ role: string; content: string }>;
     userScore?: number;
     aiScore?: number;
-    scoreData?: any;
+    scoreData?: Record<string, unknown>;
     debateId?: string;
   }) {
     // Use provided ID or generate a new one
@@ -228,6 +228,144 @@ class D1Client {
       `SELECT * FROM leaderboard ORDER BY total_score DESC LIMIT ?`,
       [limit]
     );
+  }
+
+  // User subscription functions
+  async getUser(clerkUserId: string) {
+    try {
+      const result = await this.query(
+        `SELECT * FROM users WHERE clerk_user_id = ? LIMIT 1`,
+        [clerkUserId]
+      );
+
+      if (!result.success || !result.result || result.result.length === 0) {
+        return null;
+      }
+
+      return result.result[0];
+    } catch (error) {
+      console.error('D1 get user error:', error);
+      return null;
+    }
+  }
+
+  async upsertUser(userData: {
+    clerkUserId: string;
+    stripeCustomerId?: string;
+    stripeSubscriptionId?: string;
+    stripePlan?: string;
+    subscriptionStatus?: string;
+    currentPeriodEnd?: string;
+    cancelAtPeriodEnd?: boolean;
+  }) {
+    try {
+      // Use INSERT OR REPLACE to handle both cases atomically
+      const result = await this.query(
+        `INSERT INTO users (
+          clerk_user_id, 
+          stripe_customer_id, 
+          stripe_subscription_id, 
+          stripe_plan, 
+          subscription_status, 
+          current_period_end,
+          cancel_at_period_end,
+          created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+        ON CONFLICT(clerk_user_id) DO UPDATE SET
+          stripe_customer_id = COALESCE(excluded.stripe_customer_id, stripe_customer_id),
+          stripe_subscription_id = COALESCE(excluded.stripe_subscription_id, stripe_subscription_id),
+          stripe_plan = excluded.stripe_plan,
+          subscription_status = excluded.subscription_status,
+          current_period_end = excluded.current_period_end,
+          cancel_at_period_end = excluded.cancel_at_period_end,
+          updated_at = CURRENT_TIMESTAMP`,
+        [
+          userData.clerkUserId,
+          userData.stripeCustomerId || null,
+          userData.stripeSubscriptionId || null,
+          userData.stripePlan || null,
+          userData.subscriptionStatus || null,
+          userData.currentPeriodEnd || null,
+          userData.cancelAtPeriodEnd ? 1 : 0
+        ]
+      );
+      
+      return { success: result.success, operation: 'upsert' };
+    } catch (error) {
+      console.error('D1 upsert user error:', error);
+      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+    }
+  }
+
+  // Rate limiting functions
+  async checkUserDebateLimit(userId: string) {
+    // First check if user is premium
+    const user = await this.getUser(userId);
+    if (user && user.subscription_status === 'active' && user.stripe_plan === 'premium') {
+      return {
+        success: true,
+        count: 0,
+        limit: -1, // Unlimited
+        allowed: true,
+        remaining: -1,
+        isPremium: true
+      };
+    }
+
+    const result = await this.query(
+      `SELECT COUNT(*) as debate_count FROM debates WHERE user_id = ?`,
+      [userId]
+    );
+    
+    if (result.success && result.result && result.result.length > 0) {
+      const count = (result.result[0] as Record<string, unknown>).debate_count as number;
+      const limit = 3; // Free tier limit
+      return {
+        success: true,
+        count,
+        limit,
+        allowed: count < limit,
+        remaining: Math.max(0, limit - count),
+        isPremium: false
+      };
+    }
+    
+    return { success: false, count: 0, limit: 3, allowed: true, remaining: 3, isPremium: false };
+  }
+
+  async checkDebateMessageLimit(debateId: string) {
+    const result = await this.getDebate(debateId);
+    
+    if (result.success && result.debate) {
+      // Check if user is premium
+      const user = await this.getUser(result.debate.user_id as string);
+      if (user && user.subscription_status === 'active' && user.stripe_plan === 'premium') {
+        return {
+          success: true,
+          count: 0,
+          limit: -1, // Unlimited
+          allowed: true,
+          remaining: -1,
+          isPremium: true
+        };
+      }
+
+      const messages = result.debate.messages as Array<{ role: string; content: string }> || [];
+      // Count only user messages (not system or AI messages)
+      const userMessageCount = messages.filter(m => m.role === 'user').length;
+      const limit = 3; // Free tier limit per debate
+      
+      return {
+        success: true,
+        count: userMessageCount,
+        limit,
+        allowed: userMessageCount < limit,
+        remaining: Math.max(0, limit - userMessageCount),
+        isPremium: false
+      };
+    }
+    
+    return { success: false, count: 0, limit: 3, allowed: true, remaining: 3, isPremium: false };
   }
 }
 

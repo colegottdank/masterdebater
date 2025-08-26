@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { characters, getCharacterAvatar } from '@/lib/characters';
 import { useParams, useRouter } from 'next/navigation';
 import { RoastCard } from '@/components/RoastCard';
+import RateLimitModal from '@/components/RateLimitModal';
 import { useDebate } from '@/lib/useDebate';
 
 export default function DebatePage() {
@@ -33,6 +34,8 @@ export default function DebatePage() {
     debateEnded,
     debateScore,
     isScoringDebate,
+    showScoreModal,
+    rateLimitError,
   } = state;
 
   // Loading state
@@ -50,8 +53,20 @@ export default function DebatePage() {
 
   return (
     <div className="min-h-screen relative chaos-scatter bedroom-mess cartman-room-bg">
+      {/* Rate Limit Modal */}
+      {rateLimitError && (
+        <RateLimitModal
+          isOpen={rateLimitError.show}
+          onClose={actions.clearRateLimitError}
+          type={rateLimitError.type}
+          current={rateLimitError.current}
+          limit={rateLimitError.limit}
+          message={rateLimitError.message}
+        />
+      )}
+      
       {/* Roast Card Modal */}
-      {debateEnded && debateScore && selectedCharacter && (
+      {showScoreModal && debateScore && selectedCharacter && (
         <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 overflow-y-auto">
           <div className="my-8">
             <RoastCard
@@ -69,7 +84,7 @@ export default function DebatePage() {
             {/* Close button */}
             <div className="text-center mt-6">
               <button
-                onClick={() => actions.setDebateEnded(false)}
+                onClick={() => actions.setShowScoreModal(false)}
                 className="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-8 rounded-xl transition-all border-2 border-black transform hover:rotate-2 cursor-pointer"
               >
                 ← BACK TO DEBATE
@@ -278,6 +293,18 @@ export default function DebatePage() {
                         </Link>
                       </>
                     )}
+                  </div>
+                )}
+                
+                {/* View Results button - accessible to all users for completed debates */}
+                {debateEnded && debateScore && !showScoreModal && (
+                  <div className="text-center mt-4">
+                    <button
+                      onClick={() => actions.setShowScoreModal(true)}
+                      className="font-black px-6 py-4 rounded-xl transition-all border-4 border-black transform hover:rotate-2 hover:scale-105 shadow-xl bg-green-600 hover:bg-green-700 text-white cursor-pointer"
+                    >
+                      📊 VIEW RESULTS
+                    </button>
                   </div>
                 )}
               </div>
