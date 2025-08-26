@@ -9,15 +9,15 @@ export async function generateMetadata({ params }: { params: Promise<{ debateId:
     const result = await d1.getDebate(debateId);
     
     if (result.success && result.debate?.score_data) {
-      const score = result.debate.score_data as any;
+      const score = result.debate.score_data as Record<string, unknown>;
       const character = characters.find(c => c.id === result.debate?.character);
       const characterName = character?.name || result.debate?.character;
       
-      const title = score.roastLevel === 'dominated' 
+      const title = (score.roastLevel as string) === 'dominated' 
         ? `I just BEAT ${characterName} in a debate!`
-        : `I got ${score.verdict} by ${characterName}!`;
+        : `I got ${score.verdict as string} by ${characterName}!`;
       
-      const description = `Topic: "${result.debate.topic}". Score: ${score.userScore} vs ${score.aiScore}. Can you do better?`;
+      const description = `Topic: "${result.debate.topic}". Score: ${score.userScore as number} vs ${score.aiScore as number}. Can you do better?`;
       
       const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://masterdebater.ai';
       

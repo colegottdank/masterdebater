@@ -13,9 +13,12 @@ export async function POST() {
     try {
       await d1.query(alterTableQuery);
       console.log('Added score_data column to debates table');
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Column might already exist, which is fine
-      if (error?.error?.message?.includes('duplicate column name')) {
+      if (error && typeof error === 'object' && 'error' in error && 
+          typeof error.error === 'object' && error.error && 'message' in error.error &&
+          typeof error.error.message === 'string' && 
+          error.error.message.includes('duplicate column name')) {
         console.log('score_data column already exists');
       } else {
         throw error;

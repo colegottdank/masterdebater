@@ -11,14 +11,14 @@ export async function GET(request: NextRequest) {
     const debateId = searchParams.get('debateId');
     
     // Fetch debate data if debateId provided
-    let score: any = null;
+    let score: Record<string, unknown> | null = null;
     let characterName = 'AI';
     let topic = '';
     
     if (debateId) {
       const result = await d1.getDebate(debateId);
       if (result.success && result.debate?.score_data) {
-        score = result.debate.score_data as any;
+        score = result.debate.score_data as Record<string, unknown>;
         const character = characters.find(c => c.id === result.debate?.character);
         characterName = character?.name || result.debate?.character || 'AI';
         topic = result.debate.topic || 'Master Debate';
@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
 
     // Get background gradient based on score
     const getBackground = () => {
-      switch (score.roastLevel) {
+      switch (score?.roastLevel as string) {
         case 'destroyed':
           return 'linear-gradient(135deg, #DC2626 0%, #991B1B 100%)';
         case 'roasted':
@@ -91,7 +91,7 @@ export async function GET(request: NextRequest) {
               textShadow: '4px 4px 8px rgba(0, 0, 0, 0.4)',
             }}
           >
-            {score.verdict?.toUpperCase() || 'DEBATE COMPLETED'}
+            {(score?.verdict as string)?.toUpperCase() || 'DEBATE COMPLETED'}
           </div>
 
           {/* Scores */}
@@ -104,7 +104,7 @@ export async function GET(request: NextRequest) {
               textShadow: '4px 4px 12px rgba(0, 0, 0, 0.5)',
             }}
           >
-            {score.userScore || 0} - {score.aiScore || 0}
+            {(score?.userScore as number) || 0} - {(score?.aiScore as number) || 0}
           </div>
 
           {/* Character */}
