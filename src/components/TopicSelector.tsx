@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
 export const DEBATE_TOPICS = [
   "Should moms knock before entering bedrooms?",
@@ -32,7 +32,6 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({
   onCustomTopicChange
 }) => {
   const [isSpinning, setIsSpinning] = useState(false);
-  const [spinningTopics, setSpinningTopics] = useState<string[]>([]);
   const [highlightedIndex, setHighlightedIndex] = useState<number | null>(null);
   const [showWinner, setShowWinner] = useState(false);
 

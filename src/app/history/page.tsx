@@ -26,6 +26,7 @@ export default function HistoryPage() {
   const [subscription, setSubscription] = useState<{
     isSubscribed: boolean;
     currentPeriodEnd?: string;
+    cancelAtPeriodEnd?: boolean;
   }>({ isSubscribed: false });
 
   useEffect(() => {

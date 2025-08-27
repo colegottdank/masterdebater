@@ -58,7 +58,7 @@ export async function POST(request: Request) {
         customer: customerId,
         status: 'active',
         limit: 10,
-      });
+      } as any);
       
       if (subscriptions.data.length > 0) {
         console.log('Customer has active Stripe subscription:', customerId);
@@ -67,11 +67,11 @@ export async function POST(request: Request) {
           const activeSubscription = subscriptions.data[0];
           await d1.upsertUser({
             clerkUserId: userId,
-            stripeCustomerId: customerId,
+            stripeCustomerId: customerId as string,
             stripeSubscriptionId: activeSubscription.id,
             stripePlan: 'premium',
             subscriptionStatus: 'active',
-            currentPeriodEnd: new Date(activeSubscription.current_period_end * 1000).toISOString(),
+            currentPeriodEnd: new Date((activeSubscription as any).current_period_end * 1000).toISOString(),
             cancelAtPeriodEnd: activeSubscription.cancel_at_period_end,
           });
         }
@@ -96,7 +96,7 @@ export async function POST(request: Request) {
     
     // Create checkout session
     const session = await stripe.checkout.sessions.create({
-      customer: customerId || undefined,
+      customer: customerId as string || undefined,
       customer_email: !customerId ? email : undefined,
       payment_method_types: ['card'],
       line_items: [

@@ -68,8 +68,8 @@ export async function POST(request: NextRequest) {
             stripeSubscriptionId: subscription.id,
             stripePlan: 'premium',
             subscriptionStatus: 'active',
-            currentPeriodEnd: new Date(subscription.current_period_end * 1000).toISOString(),
-            cancelAtPeriodEnd: subscription.cancel_at_period_end,
+            currentPeriodEnd: new Date((subscription as any).current_period_end * 1000).toISOString(),
+            cancelAtPeriodEnd: (subscription as any).cancel_at_period_end,
           });
           
           console.log('Database update result:', updateResult);
@@ -89,8 +89,8 @@ export async function POST(request: NextRequest) {
         const clerkUserId = subscription.metadata?.clerkUserId;
         
         if (clerkUserId) {
-          const periodEnd = subscription.current_period_end 
-            ? new Date(subscription.current_period_end * 1000).toISOString()
+          const periodEnd = (subscription as any).current_period_end 
+            ? new Date((subscription as any).current_period_end * 1000).toISOString()
             : undefined;
             
           await d1.upsertUser({
@@ -111,7 +111,7 @@ export async function POST(request: NextRequest) {
         if (clerkUserId) {
           await d1.upsertUser({
             clerkUserId,
-            stripePlan: null,
+            stripePlan: undefined,
             subscriptionStatus: 'canceled',
           });
         }
@@ -120,7 +120,7 @@ export async function POST(request: NextRequest) {
 
       case 'invoice.payment_failed': {
         const invoice = event.data.object as Stripe.Invoice;
-        const subscription = invoice.subscription;
+        const subscription = (invoice as any).subscription;
         
         if (subscription) {
           const sub = await stripe.subscriptions.retrieve(subscription as string);
@@ -130,7 +130,7 @@ export async function POST(request: NextRequest) {
             await d1.upsertUser({
               clerkUserId,
               subscriptionStatus: 'past_due',
-              stripePlan: null,
+              stripePlan: undefined,
             });
           }
         }

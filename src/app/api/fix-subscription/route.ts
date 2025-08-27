@@ -48,7 +48,7 @@ async function handleFix() {
       stripeSubscriptionId: userSubscription.id,
       stripePlan: 'premium',
       subscriptionStatus: userSubscription.status,
-      currentPeriodEnd: new Date(userSubscription.current_period_end * 1000).toISOString(),
+      currentPeriodEnd: new Date((userSubscription as any).current_period_end * 1000).toISOString(),
       cancelAtPeriodEnd: userSubscription.cancel_at_period_end,
     });
 
