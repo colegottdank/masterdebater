@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import UpgradeModal from './UpgradeModal';
 
 interface RateLimitModalProps {
   isOpen: boolean;
@@ -20,28 +21,7 @@ export default function RateLimitModal({
   limit,
   message 
 }: RateLimitModalProps) {
-  const [isUpgrading, setIsUpgrading] = useState(false);
-
-  const handleUpgrade = async () => {
-    try {
-      setIsUpgrading(true);
-      const response = await fetch('/api/stripe/create-checkout', {
-        method: 'POST',
-      });
-      
-      const data = await response.json();
-      
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        console.error('No checkout URL received');
-        setIsUpgrading(false);
-      }
-    } catch (error) {
-      console.error('Error creating checkout session:', error);
-      setIsUpgrading(false);
-    }
-  };
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   if (!isOpen) return null;
 
@@ -86,11 +66,10 @@ export default function RateLimitModal({
           {/* Action Buttons - styled like share buttons */}
           <div className="flex gap-2 justify-center mb-4">
             <button
-              onClick={handleUpgrade}
-              disabled={isUpgrading}
-              className={`bg-yellow-500 ${isUpgrading ? 'opacity-50' : 'hover:bg-yellow-600'} text-black font-black py-2 px-4 rounded-lg border-2 border-black ${isUpgrading ? 'cursor-wait' : 'cursor-pointer hover:scale-105'} transform transition-all text-sm`}
+              onClick={() => setShowUpgradeModal(true)}
+              className="bg-yellow-500 hover:bg-yellow-600 text-black font-black py-2 px-4 rounded-lg border-2 border-black cursor-pointer hover:scale-105 transform transition-all text-sm"
             >
-              {isUpgrading ? '⏳ LOADING...' : '💰 UPGRADE'}
+              💰 UPGRADE
             </button>
             
             <Link href="/history">
@@ -118,6 +97,16 @@ export default function RateLimitModal({
           </div>
         </div>
       </div>
+      
+      {/* Upgrade Modal */}
+      <UpgradeModal 
+        isOpen={showUpgradeModal}
+        onClose={() => {
+          setShowUpgradeModal(false);
+          onClose(); // Also close the rate limit modal
+        }}
+        trigger="rate-limit"
+      />
     </div>
   );
 }
