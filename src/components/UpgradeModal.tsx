@@ -3,17 +3,23 @@
 import React, { useState, useEffect } from 'react';
 import { SignedOut, SignInButton } from '@clerk/nextjs';
 import { useUser } from '@/lib/useTestUser';
+import Link from 'next/link';
 
 interface UpgradeModalProps {
   isOpen: boolean;
   onClose: () => void;
-  trigger?: 'rate-limit' | 'feature' | 'button';
+  trigger?: 'rate-limit-debate' | 'rate-limit-message' | 'feature' | 'button';
+  limitData?: {
+    current: number;
+    limit: number;
+  };
 }
 
 export default function UpgradeModal({ 
   isOpen, 
   onClose,
-  trigger = 'button'
+  trigger = 'button',
+  limitData
 }: UpgradeModalProps) {
   const { user } = useUser();
   const [isUpgrading, setIsUpgrading] = useState(false);
@@ -96,29 +102,53 @@ export default function UpgradeModal({
 
   if (!isOpen) return null;
 
-  const triggerMessages = {
-    'rate-limit': {
-      title: 'RATE LIMIT REACHED!',
-      subtitle: 'Upgrade to keep debating!',
-      emoji: '🚫'
-    },
-    'feature': {
-      title: 'PREMIUM FEATURE',
-      subtitle: 'Unlock all features!',
-      emoji: '👑'
-    },
-    'button': {
+  // Configure modal based on trigger
+  const isRateLimit = trigger?.startsWith('rate-limit');
+  const isDebateLimit = trigger === 'rate-limit-debate';
+  const isMessageLimit = trigger === 'rate-limit-message';
+
+  const getModalConfig = () => {
+    if (isDebateLimit) {
+      return {
+        title: 'DEBATE LIMIT REACHED!',
+        subtitle: "You've used all your free debates!",
+        emoji: '🚫',
+        stamp: 'DEBATE LIMIT',
+        bgGradient: 'from-red-600 to-red-900'
+      };
+    }
+    if (isMessageLimit) {
+      return {
+        title: 'MESSAGE LIMIT REACHED!',
+        subtitle: "You've sent all your free messages!",
+        emoji: '🔒',
+        stamp: 'MESSAGE LIMIT',
+        bgGradient: 'from-red-600 to-red-900'
+      };
+    }
+    if (trigger === 'feature') {
+      return {
+        title: 'PREMIUM FEATURE',
+        subtitle: 'Unlock all features!',
+        emoji: '👑',
+        stamp: 'PREMIUM',
+        bgGradient: 'from-yellow-500 to-red-600'
+      };
+    }
+    return {
       title: 'GET PREMIUM',
       subtitle: 'Become the ultimate master debater!',
-      emoji: '💰'
-    }
+      emoji: '💰',
+      stamp: 'UPGRADE',
+      bgGradient: 'from-yellow-500 to-red-600'
+    };
   };
 
-  const config = triggerMessages[trigger];
+  const config = getModalConfig();
 
   return (
     <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 animate-fade-in">
-      <div className="bg-gradient-to-br from-yellow-500 to-red-600 p-6 sm:p-8 rounded-3xl border-4 border-black shadow-2xl max-w-md w-full transform -rotate-1 relative overflow-hidden animate-bounce-in">
+      <div className={`bg-gradient-to-br ${config.bgGradient} p-6 sm:p-8 rounded-3xl border-4 border-black shadow-2xl max-w-md w-full transform -rotate-1 relative overflow-hidden animate-bounce-in`}>
         {/* Close button */}
         <button
           onClick={onClose}
@@ -127,9 +157,9 @@ export default function UpgradeModal({
           ×
         </button>
         
-        {/* Premium badge */}
-        <div className="absolute top-4 left-4 bg-yellow-400 text-black px-3 py-1 rounded-full transform -rotate-12 border-2 border-black font-black text-xs">
-          {config.emoji} PREMIUM
+        {/* Status stamp */}
+        <div className="absolute top-4 left-4 bg-red-600 text-white px-3 py-1 rounded-full transform -rotate-12 border-2 border-black font-black text-xs">
+          {config.stamp}
         </div>
         
         <div className="relative z-10 mt-8">
@@ -140,6 +170,20 @@ export default function UpgradeModal({
           <p className="text-xl text-yellow-300 font-bold text-center mb-6">
             {config.subtitle}
           </p>
+
+          {/* Show usage if rate limited */}
+          {isRateLimit && limitData && (
+            <div className="bg-black/30 rounded-lg p-3 mb-4">
+              <div className="grid grid-cols-2 gap-2 text-white text-sm">
+                <div>
+                  <span className="font-bold">Used:</span> {limitData.current}/{limitData.limit} {isDebateLimit ? 'debates' : 'messages'}
+                </div>
+                <div>
+                  <span className="font-bold">Status:</span> LIMIT REACHED
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Price */}
           <div className="text-center mb-6">
@@ -164,7 +208,9 @@ export default function UpgradeModal({
 
           {/* Features */}
           <div className="bg-black/30 rounded-xl p-4 mb-6">
-            <h3 className="text-lg font-black text-yellow-300 mb-3">PREMIUM FEATURES:</h3>
+            <h3 className="text-lg font-black text-yellow-300 mb-3">
+              {isRateLimit ? 'UNLOCK WITH PREMIUM:' : 'PREMIUM FEATURES:'}
+            </h3>
             <ul className="space-y-2 text-white text-sm font-bold">
               <li className="flex items-center">
                 <span className="text-lg mr-2">✅</span>
@@ -172,7 +218,7 @@ export default function UpgradeModal({
               </li>
               <li className="flex items-center">
                 <span className="text-lg mr-2">✅</span>
-                UNLIMITED MESSAGES (Free: 3)
+                UNLIMITED MESSAGES (Free: 3 per debate)
               </li>
               <li className="flex items-center">
                 <span className="text-lg mr-2">✅</span>
@@ -187,14 +233,18 @@ export default function UpgradeModal({
 
           {/* Cartman Quote */}
           <div className="bg-white/90 rounded-lg p-3 mb-6 border-2 border-black transform rotate-1">
+            <h3 className="font-black text-black text-sm mb-1">
+              💰 CARTMAN SAYS:
+            </h3>
             <p className="text-black font-bold italic text-sm">
-              "Respect my authoritah! Only premium members are real master debaters!"
+              {isRateLimit 
+                ? "Respect my authoritah! Pay up or get out!"
+                : "Only premium members are real master debaters!"}
             </p>
-            <p className="text-black/70 text-xs mt-1">- Eric Cartman</p>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex gap-3 justify-center">
+          <div className="flex gap-3 justify-center flex-wrap">
             <SignedOut>
               <SignInButton mode="modal">
                 <button className="bg-white text-red-600 font-black py-3 px-6 rounded-xl hover:scale-105 transition-all transform hover:rotate-2 shadow-xl border-3 border-black cursor-pointer">
@@ -208,16 +258,27 @@ export default function UpgradeModal({
                 <button
                   onClick={handleUpgrade}
                   disabled={isUpgrading}
-                  className={`bg-white text-red-600 font-black py-3 px-6 rounded-xl ${!isUpgrading ? 'hover:scale-105' : ''} transition-all transform ${!isUpgrading ? 'hover:rotate-2' : ''} shadow-xl border-3 border-black ${isUpgrading ? 'opacity-50 cursor-wait' : 'cursor-pointer'}`}
+                  className={`bg-yellow-500 text-black font-black py-3 px-6 rounded-xl ${!isUpgrading ? 'hover:scale-105 hover:bg-yellow-600' : ''} transition-all transform ${!isUpgrading ? 'hover:rotate-2' : ''} shadow-xl border-3 border-black ${isUpgrading ? 'opacity-50 cursor-wait' : 'cursor-pointer'}`}
                 >
-                  {isUpgrading ? '⏳ LOADING...' : '💰 GET PREMIUM'}
+                  {isUpgrading ? '⏳ LOADING...' : '💰 UPGRADE NOW'}
                 </button>
+                
+                {isRateLimit && (
+                  <Link href="/history">
+                    <button 
+                      onClick={onClose}
+                      className="bg-blue-500 hover:bg-blue-600 text-white font-black py-3 px-6 rounded-xl transform hover:rotate-2 transition-all hover:scale-105 cursor-pointer shadow-xl border-3 border-black"
+                    >
+                      📚 HISTORY
+                    </button>
+                  </Link>
+                )}
                 
                 <button
                   onClick={onClose}
                   className="bg-gray-700 text-white font-black py-3 px-6 rounded-xl hover:scale-105 transition-all transform hover:rotate-2 shadow-xl border-3 border-black cursor-pointer"
                 >
-                  LATER
+                  {isRateLimit ? '✓ OK' : 'LATER'}
                 </button>
               </>
             )}

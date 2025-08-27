@@ -13,7 +13,7 @@ import CharacterCard from '@/components/CharacterCard';
 import LiveBanner from '@/components/LiveBanner';
 import TopicSelector from '@/components/TopicSelector';
 import ComicBubble from '@/components/ComicBubble';
-import RateLimitModal from '@/components/RateLimitModal';
+import UpgradeModal from '@/components/UpgradeModal';
 
 export default function DebatePage() {
   const { user } = useUser();
@@ -28,18 +28,17 @@ export default function DebatePage() {
   const [currentDebateId, setCurrentDebateId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
-  // Rate limit modal state
-  const [rateLimitModal, setRateLimitModal] = useState<{
+  // Upgrade modal state
+  const [upgradeModal, setUpgradeModal] = useState<{
     isOpen: boolean;
-    type: 'debate' | 'message';
-    current: number;
-    limit: number;
-    message?: string;
+    trigger: 'rate-limit-debate' | 'rate-limit-message' | 'button';
+    limitData?: {
+      current: number;
+      limit: number;
+    };
   }>({
     isOpen: false,
-    type: 'debate',
-    current: 0,
-    limit: 3
+    trigger: 'button'
   });
 
   // Auto-scroll to bottom when new messages arrive
@@ -79,12 +78,13 @@ export default function DebatePage() {
         
         // Handle rate limit error
         if (response.status === 429 && error.error === 'debate_limit_exceeded') {
-          setRateLimitModal({
+          setUpgradeModal({
             isOpen: true,
-            type: 'debate',
-            current: error.current,
-            limit: error.limit,
-            message: error.message
+            trigger: 'rate-limit-debate',
+            limitData: {
+              current: error.current,
+              limit: error.limit
+            }
           });
         } else {
           alert('Failed to create debate. Please try again.');
@@ -178,14 +178,12 @@ export default function DebatePage() {
   if (!debateStarted) {
     return (
       <div className="min-h-screen relative chaos-scatter bedroom-mess cartman-room-bg">
-        {/* Rate Limit Modal */}
-        <RateLimitModal
-          isOpen={rateLimitModal.isOpen}
-          onClose={() => setRateLimitModal(prev => ({ ...prev, isOpen: false }))}
-          type={rateLimitModal.type}
-          current={rateLimitModal.current}
-          limit={rateLimitModal.limit}
-          message={rateLimitModal.message}
+        {/* Upgrade Modal */}
+        <UpgradeModal
+          isOpen={upgradeModal.isOpen}
+          onClose={() => setUpgradeModal(prev => ({ ...prev, isOpen: false }))}
+          trigger={upgradeModal.trigger}
+          limitData={upgradeModal.limitData}
         />
         {/* Messy Header Banner */}
         <LiveBanner 

@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { characters, getCharacterAvatar } from '@/lib/characters';
 import { useParams, useRouter } from 'next/navigation';
 import { RoastCard } from '@/components/RoastCard';
-import RateLimitModal from '@/components/RateLimitModal';
+import UpgradeModal from '@/components/UpgradeModal';
 import { useDebate } from '@/lib/useDebate';
 
 export default function DebatePage() {
@@ -53,15 +53,16 @@ export default function DebatePage() {
 
   return (
     <div className="min-h-screen relative chaos-scatter bedroom-mess cartman-room-bg">
-      {/* Rate Limit Modal */}
+      {/* Upgrade Modal */}
       {rateLimitError && (
-        <RateLimitModal
+        <UpgradeModal
           isOpen={rateLimitError.show}
           onClose={actions.clearRateLimitError}
-          type={rateLimitError.type}
-          current={rateLimitError.current}
-          limit={rateLimitError.limit}
-          message={rateLimitError.message}
+          trigger={rateLimitError.type === 'debate' ? 'rate-limit-debate' : 'rate-limit-message'}
+          limitData={{
+            current: rateLimitError.current,
+            limit: rateLimitError.limit
+          }}
         />
       )}
       

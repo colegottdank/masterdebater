@@ -6,6 +6,7 @@ import { Character } from '@/lib/claude';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { characters, getCharacterAvatar } from '@/lib/characters';
+import UpgradeModal from '@/components/UpgradeModal';
 
 interface Debate {
   id: string;
@@ -19,6 +20,7 @@ export default function HistoryPage() {
   const { user } = useUser();
   const router = useRouter();
   const [debates, setDebates] = useState<Debate[]>([]);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCharacter, setSelectedCharacter] = useState<Character | 'all'>('all');
@@ -112,7 +114,7 @@ export default function HistoryPage() {
   };
 
   const handleUpgrade = () => {
-    router.push('/upgrade');
+    setShowUpgradeModal(true);
   };
 
   return (
@@ -328,6 +330,13 @@ export default function HistoryPage() {
           )}
         </div>
       </div>
+      
+      {/* Upgrade Modal */}
+      <UpgradeModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        trigger="button"
+      />
     </div>
   );
 }
