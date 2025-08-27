@@ -11,7 +11,7 @@ export async function GET() {
     
     // Create a fresh Stripe instance with minimal config
     const testStripe = new Stripe(key, {
-      apiVersion: '2024-11-20.acacia',
+      apiVersion: '2025-07-30.basil',
       timeout: 10000,
       maxNetworkRetries: 1,
     });
