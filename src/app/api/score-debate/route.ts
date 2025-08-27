@@ -3,11 +3,12 @@ import OpenAI from "openai";
 import { d1 } from "@/lib/d1";
 import { auth } from "@clerk/nextjs/server";
 
-// Initialize OpenRouter client using OpenAI SDK (server-side only)
+// Initialize OpenRouter client using OpenAI SDK with Helicone proxy (server-side only)
 const openrouter = new OpenAI({
-  baseURL: "https://openrouter.ai/api/v1",
+  baseURL: "https://openrouter.helicone.ai/api/v1",
   apiKey: process.env.OPENROUTER_API_KEY || "",
   defaultHeaders: {
+    "Helicone-Auth": `Bearer ${process.env.HELICONE_API_KEY}`,
     "HTTP-Referer":
       process.env.NEXT_PUBLIC_APP_URL || "https://masterdebater.ai",
     "X-Title": "MasterDebater.ai",
@@ -66,8 +67,23 @@ export async function POST(request: NextRequest) {
       })
       .join("\n\n");
 
+    // Create client with custom headers for scoring
+    const scoringClient = new OpenAI({
+      baseURL: "https://openrouter.helicone.ai/api/v1",
+      apiKey: process.env.OPENROUTER_API_KEY || "",
+      defaultHeaders: {
+        "Helicone-Auth": `Bearer ${process.env.HELICONE_API_KEY}`,
+        "Helicone-User-Id": userId || "anonymous",
+        "Helicone-Property-Character": characterName,
+        "Helicone-Property-DebateId": debateId,
+        "Helicone-Property-Purpose": "scoring",
+        "HTTP-Referer": process.env.NEXT_PUBLIC_APP_URL || "https://masterdebater.ai",
+        "X-Title": "MasterDebater.ai",
+      },
+    });
+
     // Use free Gemini 2.0 Flash model for scoring
-    const response = await openrouter.chat.completions.create({
+    const response = await scoringClient.chat.completions.create({
       model: "google/gemini-2.0-flash-exp:free",
       messages: [
         {

@@ -37,7 +37,9 @@ export async function POST(request: Request) {
         character as Character,
         topic,
         userArgument,
-        previousMessages || []
+        previousMessages || [],
+        userId,
+        debateId
       );
 
       const encoder = new TextEncoder();
@@ -141,7 +143,9 @@ export async function POST(request: Request) {
       character as Character,
       topic,
       userArgument,
-      previousMessages || []
+      previousMessages || [],
+      userId,
+      debateId
     );
 
     return NextResponse.json({ response });

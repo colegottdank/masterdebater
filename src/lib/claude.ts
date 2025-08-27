@@ -3,6 +3,10 @@ import { searchForContext, shouldSearchForTopic } from './search';
 
 export const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY!,
+  baseURL: 'https://anthropic.helicone.ai',
+  defaultHeaders: {
+    'Helicone-Auth': `Bearer ${process.env.HELICONE_API_KEY}`,
+  },
 });
 
 export type Character = 'cartman' | 'kyle' | 'stan' | 'butters' | 'clyde';
@@ -43,11 +47,26 @@ export async function generateDebateResponse(
   character: Character,
   topic: string,
   userArgument: string,
-  previousMessages: Array<{ role: string; content: string }>
+  previousMessages: Array<{ role: string; content: string }>,
+  userId?: string,
+  debateId?: string
 ) {
   const systemPrompt = CHARACTER_PROMPTS[character];
   
-  const response = await anthropic.messages.create({
+  // Create client with custom headers for this request
+  const clientWithTracking = new Anthropic({
+    apiKey: process.env.ANTHROPIC_API_KEY!,
+    baseURL: 'https://anthropic.helicone.ai',
+    defaultHeaders: {
+      'Helicone-Auth': `Bearer ${process.env.HELICONE_API_KEY}`,
+      'Helicone-User-Id': userId || 'anonymous',
+      'Helicone-Property-Character': character,
+      'Helicone-Property-Topic': topic.substring(0, 100), // Limit topic length
+      'Helicone-Property-DebateId': debateId || 'new',
+    },
+  });
+  
+  const response = await clientWithTracking.messages.create({
     model: 'claude-sonnet-4-20250514',
     max_tokens: 150,
     system: systemPrompt,
@@ -66,7 +85,9 @@ export async function generateDebateResponseStream(
   character: Character,
   topic: string,
   userArgument: string,
-  previousMessages: Array<{ role: string; content: string }>
+  previousMessages: Array<{ role: string; content: string }>,
+  userId?: string,
+  debateId?: string
 ) {
   const systemPrompt = CHARACTER_PROMPTS[character];
   
@@ -106,7 +127,21 @@ export async function generateDebateResponseStream(
   
   contextualPrompt += ` COUNTER-ATTACK their specific argument. Be ${character}. Under 60 words. Make it personal and aggressive! Reference getting that nut/podcast drama when relevant!`;
   
-  return anthropic.messages.stream({
+  // Create client with custom headers for this request
+  const clientWithTracking = new Anthropic({
+    apiKey: process.env.ANTHROPIC_API_KEY!,
+    baseURL: 'https://anthropic.helicone.ai',
+    defaultHeaders: {
+      'Helicone-Auth': `Bearer ${process.env.HELICONE_API_KEY}`,
+      'Helicone-User-Id': userId || 'anonymous',
+      'Helicone-Property-Character': character,
+      'Helicone-Property-Topic': topic.substring(0, 100), // Limit topic length
+      'Helicone-Property-DebateId': debateId || 'new',
+      'Helicone-Property-TurnNumber': turnNumber.toString(),
+    },
+  });
+  
+  return clientWithTracking.messages.stream({
     model: 'claude-sonnet-4-20250514',
     max_tokens: 120,
     system: systemPrompt,
