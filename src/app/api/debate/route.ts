@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { generateDebateResponseStream, Character } from '@/lib/claude';
+// Switch to OpenRouter for free AI!
+import { generateDebateResponseStream, generateDebateResponse, Character } from '@/lib/openrouter-debate';
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { d1 } from '@/lib/d1';
 
@@ -31,15 +32,20 @@ export async function POST(request: Request) {
       }
     }
 
+    // Check if user is premium for rate limiting
+    const user = userId ? await d1.getUser(userId) : null;
+    const isPremium = user?.subscription_status === 'active';
+
     // If streaming is requested
     if (stream) {
-      const anthropicStream = await generateDebateResponseStream(
+      const debateStream = await generateDebateResponseStream(
         character as Character,
         topic,
         userArgument,
         previousMessages || [],
         userId,
-        debateId
+        debateId,
+        isPremium
       );
 
       const encoder = new TextEncoder();
@@ -48,9 +54,10 @@ export async function POST(request: Request) {
       const readable = new ReadableStream({
         async start(controller) {
           try {
-            for await (const chunk of anthropicStream) {
-              if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
-                const text = chunk.delta.text;
+            for await (const chunk of debateStream) {
+              // OpenRouter uses different chunk format
+              if (chunk.choices?.[0]?.delta?.content) {
+                const text = chunk.choices[0].delta.content;
                 fullResponse += text;
                 
                 const data = JSON.stringify({ content: text, type: 'chunk' });
@@ -138,14 +145,14 @@ export async function POST(request: Request) {
     }
 
     // Fallback to non-streaming response
-    const { generateDebateResponse } = await import('@/lib/claude');
     const response = await generateDebateResponse(
       character as Character,
       topic,
       userArgument,
       previousMessages || [],
       userId,
-      debateId
+      debateId,
+      isPremium
     );
 
     return NextResponse.json({ response });

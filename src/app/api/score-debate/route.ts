@@ -2,18 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 import { d1 } from "@/lib/d1";
 import { auth } from "@clerk/nextjs/server";
+import { getHeliconeHeaders } from "@/lib/helicone";
 
-// Initialize OpenRouter client using OpenAI SDK with Helicone proxy (server-side only)
-const openrouter = new OpenAI({
-  baseURL: "https://openrouter.helicone.ai/api/v1",
-  apiKey: process.env.OPENROUTER_API_KEY || "",
-  defaultHeaders: {
-    "Helicone-Auth": `Bearer ${process.env.HELICONE_API_KEY}`,
-    "HTTP-Referer":
-      process.env.NEXT_PUBLIC_APP_URL || "https://masterdebater.ai",
-    "X-Title": "MasterDebater.ai",
-  },
-});
+// Note: We create OpenRouter clients per-request with user-specific headers now
 
 const SCORING_PROMPT = `You are a South Park-style debate judge. Score this debate between a human and a South Park character.
 
@@ -67,16 +58,20 @@ export async function POST(request: NextRequest) {
       })
       .join("\n\n");
 
+    // Check if user is premium
+    const user = userId ? await d1.getUser(userId) : null;
+    const isPremium = user?.subscription_status === 'active';
+
     // Create client with custom headers for scoring
     const scoringClient = new OpenAI({
       baseURL: "https://openrouter.helicone.ai/api/v1",
       apiKey: process.env.OPENROUTER_API_KEY || "",
       defaultHeaders: {
-        "Helicone-Auth": `Bearer ${process.env.HELICONE_API_KEY}`,
-        "Helicone-User-Id": userId || "anonymous",
-        "Helicone-Property-Character": characterName,
-        "Helicone-Property-DebateId": debateId,
-        "Helicone-Property-Purpose": "scoring",
+        ...getHeliconeHeaders(userId || undefined, isPremium, {
+          character: characterName,
+          debateId,
+          purpose: "scoring",
+        }),
         "HTTP-Referer": process.env.NEXT_PUBLIC_APP_URL || "https://masterdebater.ai",
         "X-Title": "MasterDebater.ai",
       },
