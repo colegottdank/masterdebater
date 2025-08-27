@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   description: "Challenge AI master debaters inspired by South Park's greatest minds. Can you out-debate Cartman?",
   icons: {
     icon: [
-      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/ai-favicon-v2.png', type: 'image/png' },
       { url: '/favicon.ico', type: 'image/x-icon' }
     ],
     shortcut: '/favicon.ico',

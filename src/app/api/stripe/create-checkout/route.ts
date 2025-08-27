@@ -123,8 +123,34 @@ export async function POST(request: Request) {
     return NextResponse.json({ url: session.url });
   } catch (error: any) {
     console.error('Error creating checkout session:', error);
+    
+    // More detailed error information for Stripe connection issues
+    if (error.type === 'StripeConnectionError') {
+      return NextResponse.json(
+        { 
+          error: 'Unable to connect to payment service. Please try again later.',
+          details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        },
+        { status: 503 }
+      );
+    }
+    
+    if (error.type === 'StripeAPIError') {
+      return NextResponse.json(
+        { 
+          error: 'Payment service error. Please check your configuration.',
+          details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        },
+        { status: 500 }
+      );
+    }
+    
     return NextResponse.json(
-      { error: error.message || 'Failed to create checkout session' },
+      { 
+        error: error.message || 'Failed to create checkout session',
+        type: error.type,
+        code: error.code
+      },
       { status: 500 }
     );
   }
