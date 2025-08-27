@@ -7,6 +7,7 @@ const isPublicRoute = createRouteMatcher([
   '/api/webhook(.*)',
   '/api/stripe/health',  // Allow public health check
   '/api/stripe/price',   // Allow public price check
+  '/api/stripe/test',    // Allow public test endpoint
   '/debate/(.*)',  // Allow public access to view specific debates
   '/api/debate/(.*)',  // Allow API access to fetch debate data
 ])

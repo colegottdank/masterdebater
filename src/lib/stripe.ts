@@ -24,9 +24,10 @@ if (process.env.NODE_ENV === "production" && isTestKey) {
 }
 
 export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: "2025-07-30.basil",
-  timeout: 20000, // 20 second timeout
-  maxNetworkRetries: 2,
+  apiVersion: "2024-11-20.acacia",  // Use latest stable API version
+  timeout: 30000, // 30 second timeout
+  maxNetworkRetries: 3,
+  telemetry: false, // Disable telemetry which can cause issues
 });
 
 export interface SubscriptionData {
