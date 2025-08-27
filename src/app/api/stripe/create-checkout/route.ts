@@ -16,6 +16,19 @@ export async function POST(request: Request) {
     
     // Check for existing customer in database
     const dbUser = await d1.getUser(userId);
+    
+    // Check if user already has an active subscription
+    if (dbUser?.subscription_status === 'active' && dbUser?.stripe_plan === 'premium') {
+      console.log('User already has active subscription:', userId);
+      return NextResponse.json(
+        { 
+          error: 'You already have an active subscription', 
+          hasSubscription: true 
+        }, 
+        { status: 400 }
+      );
+    }
+    
     let customerId = dbUser?.stripe_customer_id;
     
     if (!customerId && email) {
@@ -36,6 +49,39 @@ export async function POST(request: Request) {
           },
         });
         customerId = customer.id;
+      }
+    }
+    
+    // If customer exists, check for active subscriptions in Stripe
+    if (customerId) {
+      const subscriptions = await stripe.subscriptions.list({
+        customer: customerId,
+        status: 'active',
+        limit: 10,
+      });
+      
+      if (subscriptions.data.length > 0) {
+        console.log('Customer has active Stripe subscription:', customerId);
+        // Update database if it's out of sync
+        if (dbUser && dbUser.subscription_status !== 'active') {
+          const activeSubscription = subscriptions.data[0];
+          await d1.upsertUser({
+            clerkUserId: userId,
+            stripeCustomerId: customerId,
+            stripeSubscriptionId: activeSubscription.id,
+            stripePlan: 'premium',
+            subscriptionStatus: 'active',
+            currentPeriodEnd: new Date(activeSubscription.current_period_end * 1000).toISOString(),
+            cancelAtPeriodEnd: activeSubscription.cancel_at_period_end,
+          });
+        }
+        return NextResponse.json(
+          { 
+            error: 'You already have an active subscription', 
+            hasSubscription: true 
+          }, 
+          { status: 400 }
+        );
       }
     }
 

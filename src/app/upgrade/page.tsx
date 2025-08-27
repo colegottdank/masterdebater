@@ -11,13 +11,26 @@ export default function UpgradePage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
+  const [isCheckingSubscription, setIsCheckingSubscription] = useState(true);
 
   useEffect(() => {
-    // Check if user is already subscribed
-    if (user) {
-      const metadata = user.publicMetadata as any;
-      setIsSubscribed(metadata?.stripePlan === 'premium' && metadata?.subscriptionStatus === 'active');
-    }
+    // Check subscription status from API
+    const checkSubscription = async () => {
+      if (user) {
+        try {
+          const response = await fetch('/api/subscription');
+          if (response.ok) {
+            const data = await response.json();
+            setIsSubscribed(data.isSubscribed);
+          }
+        } catch (error) {
+          console.error('Error checking subscription:', error);
+        }
+      }
+      setIsCheckingSubscription(false);
+    };
+    
+    checkSubscription();
   }, [user]);
 
   const handleUpgrade = async () => {
@@ -35,8 +48,13 @@ export default function UpgradePage() {
       
       if (data.url) {
         window.location.href = data.url;
+      } else if (data.hasSubscription) {
+        // User already has subscription, refresh the status
+        setIsSubscribed(true);
+        setIsLoading(false);
+        console.log('User already has an active subscription');
       } else {
-        console.error('Failed to create checkout session');
+        console.error('Failed to create checkout session:', data.error);
         setIsLoading(false);
       }
     } catch (error) {
@@ -69,7 +87,12 @@ export default function UpgradePage() {
 
           {/* Pricing Card */}
           <div className="bg-gradient-to-br from-yellow-500 to-red-600 p-8 rounded-3xl border-4 border-black shadow-2xl transform -rotate-1">
-            {isSubscribed ? (
+            {isCheckingSubscription ? (
+              <div className="text-center">
+                <div className="text-6xl mb-4 animate-pulse">⏳</div>
+                <h2 className="text-3xl font-black text-white">Checking subscription status...</h2>
+              </div>
+            ) : isSubscribed ? (
               <div className="text-center">
                 <div className="text-6xl mb-4">👑</div>
                 <h2 className="text-4xl font-black text-white mb-4">YOU'RE ALREADY PREMIUM!</h2>

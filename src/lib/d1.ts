@@ -233,20 +233,31 @@ class D1Client {
   // User subscription functions
   async getUser(clerkUserId: string) {
     try {
+      console.log('Getting user from D1 for clerkUserId:', clerkUserId);
       const result = await this.query(
         `SELECT * FROM users WHERE clerk_user_id = ? LIMIT 1`,
         [clerkUserId]
       );
 
+      console.log('D1 getUser raw result:', JSON.stringify(result));
+
       if (!result.success || !result.result || result.result.length === 0) {
+        console.log('No user found in database for:', clerkUserId);
         return null;
       }
 
-      return result.result[0];
+      const user = result.result[0];
+      console.log('Found user in database:', user);
+      return user;
     } catch (error) {
       console.error('D1 get user error:', error);
       return null;
     }
+  }
+  
+  async hasActiveSubscription(clerkUserId: string): Promise<boolean> {
+    const user = await this.getUser(clerkUserId);
+    return user?.subscription_status === 'active' && user?.stripe_plan === 'premium';
   }
 
   async upsertUser(userData: {
@@ -272,11 +283,11 @@ class D1Client {
           created_at
         ) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
         ON CONFLICT(clerk_user_id) DO UPDATE SET
-          stripe_customer_id = COALESCE(excluded.stripe_customer_id, stripe_customer_id),
-          stripe_subscription_id = COALESCE(excluded.stripe_subscription_id, stripe_subscription_id),
-          stripe_plan = excluded.stripe_plan,
-          subscription_status = excluded.subscription_status,
-          current_period_end = excluded.current_period_end,
+          stripe_customer_id = CASE WHEN excluded.stripe_customer_id IS NOT NULL THEN excluded.stripe_customer_id ELSE stripe_customer_id END,
+          stripe_subscription_id = CASE WHEN excluded.stripe_subscription_id IS NOT NULL THEN excluded.stripe_subscription_id ELSE stripe_subscription_id END,
+          stripe_plan = CASE WHEN excluded.stripe_plan IS NOT NULL THEN excluded.stripe_plan ELSE stripe_plan END,
+          subscription_status = CASE WHEN excluded.subscription_status IS NOT NULL THEN excluded.subscription_status ELSE subscription_status END,
+          current_period_end = CASE WHEN excluded.current_period_end IS NOT NULL THEN excluded.current_period_end ELSE current_period_end END,
           cancel_at_period_end = excluded.cancel_at_period_end,
           updated_at = CURRENT_TIMESTAMP`,
         [

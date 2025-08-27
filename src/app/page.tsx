@@ -63,13 +63,13 @@ export default function Home() {
             
             {/* Multiple Sponsor Banners */}
             <div className="absolute top-4 right-8 bg-yellow-400 text-black px-3 py-1 rounded transform rotate-2 border-2 border-black text-sm font-bold">
-              SPONSORED BY: KFC
+              CHANNEL OF TRUTH™
             </div>
             <div className="absolute top-16 right-12 bg-blue-500 text-white px-2 py-1 rounded transform -rotate-3 border-2 border-black text-xs font-bold">
-              CITY WOK
+              EDITED FOR VICTORY
             </div>
             <div className="absolute bottom-4 left-24 bg-green-500 text-white px-2 py-1 rounded transform rotate-1 border-2 border-black text-xs font-bold">
-              CASA BONITA
+              MOM-APPROVED*
             </div>
 
             {/* Bedroom Clutter */}
@@ -82,8 +82,9 @@ export default function Home() {
                 WELCOME TO THE STUDIO!
               </h2>
               <p className="text-lg text-gray-200 mb-4 leading-relaxed">
-                You think you can challenge ME? I&apos;ve debated college professors, destroyed liberals, 
-                and made Kyle cry! I&apos;ve been master debating since I was 8 years old!
+                You think you can challenge ME? I&apos;ve destroyed college girls in debates, 
+                made Kyle cry, and I&apos;ve been masterdebating since I was 8 years old! 
+                (Mom keeps interrupting but she doesn&apos;t understand podcasting!)
               </p>
               <div className="bg-red-600 text-white p-3 rounded-lg border-2 border-black transform rotate-1 inline-block shadow-lg">
                 <span className="font-bold">CARTMAN&apos;S DEBATE RULES:</span> No crying, no fact-checking, respect my authoritah!
@@ -110,7 +111,7 @@ export default function Home() {
           <h3 className="text-4xl font-black text-yellow-400 mb-2 transform -rotate-1">
             CHOOSE YOUR CHALLENGER
           </h3>
-          <p className="text-gray-300 text-lg">Who&apos;s gonna help you get that $60 nut? (Spoiler: Nobody, you&apos;ll lose)</p>
+          <p className="text-gray-300 text-lg">Pick who gets DESTROYED in today&apos;s masterdebate! (Spoiler: It&apos;s you)</p>
         </div>
 
         {/* Character Selection - More Chaotic */}
@@ -169,41 +170,46 @@ export default function Home() {
           </h3>
           <div className="grid md:grid-cols-3 gap-4">
             <div className="bg-orange-900/50 p-4 rounded-lg border-2 border-orange-400 transform -rotate-1">
-              <div className="font-bold text-orange-300">Clyde&apos;s Show STOLEN</div>
-              <div className="text-sm text-gray-300">&quot;I was here first!&quot;</div>
-              <div className="text-xs text-orange-400">Cartman hostile takeover</div>
+              <div className="font-bold text-orange-300">Clyde&apos;s Hostile Takeover</div>
+              <div className="text-sm text-gray-300">&quot;#RespectClydesAuthority&quot;</div>
+              <div className="text-xs text-orange-400">Cartman: &quot;He stole my shtick!&quot;</div>
             </div>
             <div className="bg-purple-900/50 p-4 rounded-lg border-2 border-purple-400 transform rotate-1">
-              <div className="font-bold text-purple-300">Charlie Kirk Award</div>
-              <div className="text-sm text-gray-300">Young Master Debaters competition</div>
-              <div className="text-xs text-purple-400">Cartman wants it BAD</div>
+              <div className="font-bold text-purple-300">Mom&apos;s Confused</div>
+              <div className="text-sm text-gray-300">&quot;Stop that masterdebating!&quot;</div>
+              <div className="text-xs text-purple-400">It&apos;s just debates, Mom!</div>
             </div>
             <div className="bg-green-900/50 p-4 rounded-lg border-2 border-green-400">
-              <div className="font-bold text-green-300">Getting That Nut</div>
-              <div className="text-sm text-gray-300">$60/week podcast goal</div>
-              <div className="text-xs text-green-400">Money talks, morals walk</div>
+              <div className="font-bold text-green-300">College Girls DESTROYED</div>
+              <div className="text-sm text-gray-300">47 smart replies edited out</div>
+              <div className="text-xs text-green-400">(In debates, obviously)</div>
             </div>
           </div>
         </div>
 
         {/* Cartman's Stats */}
-        <div className="max-w-2xl mx-auto text-center">
+        <div className="max-w-3xl mx-auto text-center">
           <div className="bg-gradient-to-r from-yellow-400 to-red-500 text-black p-6 rounded-2xl border-4 border-black transform -rotate-1 shadow-xl">
-            <h4 className="text-3xl font-black mb-2">CARTMAN&apos;S STOLEN STATS</h4>
-            <div className="grid grid-cols-3 gap-4 text-center">
+            <h4 className="text-3xl font-black mb-4">CARTMAN&apos;S MASTERDEBATING STATS</h4>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
               <div>
                 <div className="text-2xl font-black">1</div>
-                <div className="text-sm font-bold">Podcasts Stolen</div>
+                <div className="text-xs font-bold">Podcasts Stolen</div>
               </div>
               <div>
-                <div className="text-2xl font-black">$60</div>
-                <div className="text-sm font-bold">Weekly Nut Goal</div>
+                <div className="text-2xl font-black">999+</div>
+                <div className="text-xs font-bold">Debates Won*</div>
               </div>
               <div>
-                <div className="text-2xl font-black">0</div>
-                <div className="text-sm font-bold">Charlie Kirk Awards</div>
+                <div className="text-2xl font-black">47</div>
+                <div className="text-xs font-bold">Smart Replies Edited</div>
+              </div>
+              <div>
+                <div className="text-2xl font-black">∞</div>
+                <div className="text-xs font-bold">Mom Interruptions</div>
               </div>
             </div>
+            <div className="text-xs mt-3 italic">*After editing</div>
           </div>
         </div>
 

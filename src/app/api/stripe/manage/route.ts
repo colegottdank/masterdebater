@@ -7,24 +7,30 @@ export async function POST(request: Request) {
   try {
     const { userId } = await auth();
     
+    console.log('Manage subscription request for userId:', userId);
+    
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const user = await d1.getUser(userId);
+    console.log('User from database:', user);
     
     if (!user || !user.stripe_customer_id) {
+      console.error('No customer ID found. User:', user);
       return NextResponse.json({ error: 'No subscription found' }, { status: 404 });
     }
 
     const { origin } = new URL(request.url);
+    console.log('Creating portal session for customer:', user.stripe_customer_id);
 
     // Create customer portal session
     const session = await stripe.billingPortal.sessions.create({
       customer: user.stripe_customer_id,
-      return_url: `${origin}/debate`,
+      return_url: `${origin}/history`,
     });
 
+    console.log('Portal session created:', session.id, 'URL:', session.url);
     return NextResponse.json({ url: session.url });
   } catch (error: any) {
     console.error('Error creating customer portal session:', error);

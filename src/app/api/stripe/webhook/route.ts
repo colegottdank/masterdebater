@@ -38,17 +38,30 @@ export async function POST(request: NextRequest) {
         const session = event.data.object as Stripe.Checkout.Session;
         const clerkUserId = session.metadata?.clerkUserId;
         
-        console.log('Checkout completed - clerkUserId:', clerkUserId, 'subscription:', session.subscription);
+        console.log('Checkout completed - clerkUserId:', clerkUserId, 'subscription:', session.subscription, 'customer:', session.customer);
         
         if (clerkUserId && session.subscription) {
+          // Check if user already has an active subscription
+          const existingUser = await d1.getUser(clerkUserId);
+          if (existingUser?.subscription_status === 'active' && 
+              existingUser?.stripe_subscription_id && 
+              existingUser?.stripe_subscription_id !== session.subscription) {
+            console.warn('⚠️ User already has a different active subscription:', {
+              userId: clerkUserId,
+              existingSubscription: existingUser.stripe_subscription_id,
+              newSubscription: session.subscription
+            });
+            // You might want to cancel the old subscription or handle this case
+          }
+          
           // Get subscription details
           const subscription = await stripe.subscriptions.retrieve(
             session.subscription as string
           );
           
-          console.log('Updating user subscription for:', clerkUserId);
+          console.log('Updating user subscription for:', clerkUserId, 'with customer:', session.customer);
           
-          // Save to database
+          // Save to database - ensure customer ID is saved
           const updateResult = await d1.upsertUser({
             clerkUserId,
             stripeCustomerId: session.customer as string,
@@ -60,6 +73,13 @@ export async function POST(request: NextRequest) {
           });
           
           console.log('Database update result:', updateResult);
+        } else if (clerkUserId) {
+          // Even if no subscription in session, save the customer ID
+          console.log('Saving customer ID for user:', clerkUserId);
+          await d1.upsertUser({
+            clerkUserId,
+            stripeCustomerId: session.customer as string,
+          });
         }
         break;
       }

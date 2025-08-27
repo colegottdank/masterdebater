@@ -38,6 +38,27 @@ button {
   cursor: pointer;
 }
 
+/* Slot machine spin animation */
+@keyframes slotSpin {
+  0% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-5px) scale(1.05); }
+  100% { transform: translateY(0) scale(1); }
+}
+
+@keyframes wheelGlow {
+  0% { box-shadow: 0 0 20px rgba(251, 191, 36, 0.5); }
+  50% { box-shadow: 0 0 40px rgba(251, 191, 36, 0.9), 0 0 60px rgba(220, 38, 38, 0.5); }
+  100% { box-shadow: 0 0 20px rgba(251, 191, 36, 0.5); }
+}
+
+.topic-spinning {
+  animation: slotSpin 0.2s infinite;
+}
+
+.wheel-active {
+  animation: wheelGlow 0.5s infinite;
+}
+
 .south-park-title {
   font-family: 'Impact', 'Arial Black', sans-serif;
   text-transform: uppercase;

@@ -52,7 +52,11 @@ export default function HistoryPage() {
       const response = await fetch('/api/subscription');
       if (response.ok) {
         const data = await response.json();
-        setSubscription(data);
+        setSubscription({
+          isSubscribed: data.isSubscribed,
+          currentPeriodEnd: data.currentPeriodEnd,
+          cancelAtPeriodEnd: data.cancelAtPeriodEnd
+        });
       }
     } catch (error) {
       console.error('Error fetching subscription:', error);
@@ -92,11 +96,12 @@ export default function HistoryPage() {
       });
       
       const data = await response.json();
+      console.log('Manage response:', data);
       
       if (data.url) {
         window.location.href = data.url;
       } else {
-        console.error('No portal URL received');
+        console.error('No portal URL received. Response:', data);
         setIsManagingSubscription(false);
       }
     } catch (error) {
