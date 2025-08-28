@@ -11,6 +11,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Parse request body for return URL
+    const body = await request.json().catch(() => ({}));
+    const returnUrl = body.returnUrl || '/debate';
+
     const clerkUser = await currentUser();
     const email = clerkUser?.emailAddresses?.[0]?.emailAddress;
     
@@ -106,8 +110,8 @@ export async function POST(request: Request) {
         },
       ],
       mode: 'subscription',
-      success_url: `${origin}/debate?upgraded=true`,
-      cancel_url: `${origin}/debate?canceled=true`,
+      success_url: `${origin}${returnUrl}${returnUrl.includes('?') ? '&' : '?'}upgraded=true`,
+      cancel_url: `${origin}${returnUrl}${returnUrl.includes('?') ? '&' : '?'}canceled=true`,
       metadata: {
         clerkUserId: userId,
       },

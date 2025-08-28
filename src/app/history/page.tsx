@@ -96,6 +96,12 @@ export default function HistoryPage() {
       setIsManagingSubscription(true);
       const response = await fetch('/api/stripe/manage', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          returnUrl: window.location.pathname + window.location.search
+        }),
       });
       
       const data = await response.json();

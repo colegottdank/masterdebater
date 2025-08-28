@@ -13,6 +13,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Parse request body for return URL
+    const body = await request.json().catch(() => ({}));
+    const returnUrl = body.returnUrl || '/history';
+
     const user = await d1.getUser(userId);
     console.log('User from database:', user);
     
@@ -27,7 +31,7 @@ export async function POST(request: Request) {
     // Create customer portal session
     const session = await stripe.billingPortal.sessions.create({
       customer: user.stripe_customer_id as string,
-      return_url: `${origin}/history`,
+      return_url: `${origin}${returnUrl}`,
     });
 
     console.log('Portal session created:', session.id, 'URL:', session.url);
