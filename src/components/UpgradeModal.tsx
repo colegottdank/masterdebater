@@ -27,7 +27,7 @@ export default function UpgradeModal({
     formatted: string;
     interval: string;
     isFallback: boolean;
-  }>({ formatted: '$4.99', interval: 'month', isFallback: true });
+  }>({ formatted: '$20.00', interval: 'month', isFallback: true });
   const [isLoadingPrice, setIsLoadingPrice] = useState(true);
 
   useEffect(() => {
@@ -148,7 +148,7 @@ export default function UpgradeModal({
 
   return (
     <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 animate-fade-in">
-      <div className={`bg-gradient-to-br ${config.bgGradient} p-6 sm:p-8 rounded-3xl border-4 border-black shadow-2xl max-w-md w-full transform -rotate-1 relative overflow-hidden animate-bounce-in`}>
+      <div className={`bg-gradient-to-br ${config.bgGradient} p-4 sm:p-6 rounded-3xl border-4 border-black shadow-2xl max-w-md w-full transform -rotate-1 relative overflow-hidden animate-bounce-in`}>
         {/* Close button */}
         <button
           onClick={onClose}
@@ -162,12 +162,12 @@ export default function UpgradeModal({
           {config.stamp}
         </div>
         
-        <div className="relative z-10 mt-8">
+        <div className="relative z-10 mt-6">
           {/* Header */}
-          <h2 className="text-3xl sm:text-4xl font-black text-white text-center mb-2 transform rotate-1 south-park-title">
+          <h2 className="text-2xl sm:text-3xl font-black text-white text-center mb-2 transform rotate-1 south-park-title">
             {config.title}
           </h2>
-          <p className="text-xl text-yellow-300 font-bold text-center mb-6">
+          <p className="text-lg text-yellow-300 font-bold text-center mb-4">
             {config.subtitle}
           </p>
 
@@ -185,69 +185,61 @@ export default function UpgradeModal({
             </div>
           )}
 
-          {/* Price */}
-          <div className="text-center mb-6">
+          {/* Price - Smaller */}
+          <div className="text-center mb-4">
             {isLoadingPrice ? (
-              <div className="text-5xl font-black text-white animate-pulse">...</div>
+              <div className="text-4xl font-black text-white animate-pulse">...</div>
             ) : (
               <>
-                <div className="text-5xl font-black text-white mb-1">
+                <div className="text-4xl font-black text-white mb-1">
                   {price.formatted}
                 </div>
-                <div className="text-xl text-yellow-300 font-bold">
+                <div className="text-lg text-yellow-300 font-bold">
                   PER {price.interval.toUpperCase()}
                 </div>
-                {price.isFallback && (
-                  <div className="text-xs text-white/70 mt-1">
-                    * Price may vary
-                  </div>
-                )}
               </>
             )}
           </div>
 
-          {/* Features */}
-          <div className="bg-black/30 rounded-xl p-4 mb-6">
-            <h3 className="text-lg font-black text-yellow-300 mb-3">
+          {/* Features - Compact */}
+          <div className="bg-black/30 rounded-xl p-3 mb-4">
+            <h3 className="text-sm font-black text-yellow-300 mb-2">
               {isRateLimit ? 'UNLOCK WITH PREMIUM:' : 'PREMIUM FEATURES:'}
             </h3>
-            <ul className="space-y-2 text-white text-sm font-bold">
-              <li className="flex items-center">
-                <span className="text-lg mr-2">✅</span>
-                UNLIMITED DEBATES (Free: 3)
-              </li>
-              <li className="flex items-center">
-                <span className="text-lg mr-2">✅</span>
-                UNLIMITED MESSAGES (Free: 3 per debate)
-              </li>
-              <li className="flex items-center">
-                <span className="text-lg mr-2">✅</span>
+            <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-white text-xs font-bold">
+              <div className="flex items-center">
+                <span className="text-sm mr-1">✅</span>
+                UNLIMITED DEBATES
+              </div>
+              <div className="flex items-center">
+                <span className="text-sm mr-1">✅</span>
+                UNLIMITED MESSAGES
+              </div>
+              <div className="flex items-center">
+                <span className="text-sm mr-1">✅</span>
                 PRIORITY ROASTING
-              </li>
-              <li className="flex items-center">
-                <span className="text-lg mr-2">✅</span>
-                CHARLIE KIRK AWARD ACCESS
-              </li>
-            </ul>
+              </div>
+              <div className="flex items-center">
+                <span className="text-sm mr-1">✅</span>
+                CHARLIE KIRK AWARD
+              </div>
+            </div>
           </div>
 
-          {/* Cartman Quote */}
-          <div className="bg-white/90 rounded-lg p-3 mb-6 border-2 border-black transform rotate-1">
-            <h3 className="font-black text-black text-sm mb-1">
-              💰 CARTMAN SAYS:
-            </h3>
-            <p className="text-black font-bold italic text-sm">
+          {/* Cartman Quote - Smaller */}
+          <div className="bg-white/90 rounded-lg p-2 mb-4 border-2 border-black transform rotate-1">
+            <p className="text-black font-bold italic text-xs text-center">
               {isRateLimit 
                 ? "Respect my authoritah! Pay up or get out!"
                 : "Only premium members are real master debaters!"}
             </p>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex gap-3 justify-center flex-wrap">
+          {/* Action Buttons - Smaller */}
+          <div className="flex gap-2 justify-center flex-wrap">
             <SignedOut>
               <SignInButton mode="modal">
-                <button className="bg-white text-red-600 font-black py-3 px-6 rounded-xl hover:scale-105 transition-all transform hover:rotate-2 shadow-xl border-3 border-black cursor-pointer">
+                <button className="bg-white text-red-600 font-black py-2 px-4 rounded-lg hover:scale-105 transition-all transform hover:rotate-2 shadow-xl border-2 border-black cursor-pointer text-sm">
                   SIGN IN TO UPGRADE
                 </button>
               </SignInButton>
@@ -258,7 +250,7 @@ export default function UpgradeModal({
                 <button
                   onClick={handleUpgrade}
                   disabled={isUpgrading}
-                  className={`bg-yellow-500 text-black font-black py-3 px-6 rounded-xl ${!isUpgrading ? 'hover:scale-105 hover:bg-yellow-600' : ''} transition-all transform ${!isUpgrading ? 'hover:rotate-2' : ''} shadow-xl border-3 border-black ${isUpgrading ? 'opacity-50 cursor-wait' : 'cursor-pointer'}`}
+                  className={`bg-yellow-500 text-black font-black py-2 px-4 rounded-lg ${!isUpgrading ? 'hover:scale-105 hover:bg-yellow-600' : ''} transition-all transform ${!isUpgrading ? 'hover:rotate-2' : ''} shadow-xl border-2 border-black ${isUpgrading ? 'opacity-50 cursor-wait' : 'cursor-pointer'} text-sm`}
                 >
                   {isUpgrading ? '⏳ LOADING...' : '💰 UPGRADE NOW'}
                 </button>
@@ -267,7 +259,7 @@ export default function UpgradeModal({
                   <Link href="/history">
                     <button 
                       onClick={onClose}
-                      className="bg-blue-500 hover:bg-blue-600 text-white font-black py-3 px-6 rounded-xl transform hover:rotate-2 transition-all hover:scale-105 cursor-pointer shadow-xl border-3 border-black"
+                      className="bg-blue-500 hover:bg-blue-600 text-white font-black py-2 px-4 rounded-lg transform hover:rotate-2 transition-all hover:scale-105 cursor-pointer shadow-xl border-2 border-black text-sm"
                     >
                       📚 HISTORY
                     </button>
@@ -276,7 +268,7 @@ export default function UpgradeModal({
                 
                 <button
                   onClick={onClose}
-                  className="bg-gray-700 text-white font-black py-3 px-6 rounded-xl hover:scale-105 transition-all transform hover:rotate-2 shadow-xl border-3 border-black cursor-pointer"
+                  className="bg-gray-700 text-white font-black py-2 px-4 rounded-lg hover:scale-105 transition-all transform hover:rotate-2 shadow-xl border-2 border-black cursor-pointer text-sm"
                 >
                   {isRateLimit ? '✓ OK' : 'LATER'}
                 </button>
@@ -284,17 +276,6 @@ export default function UpgradeModal({
             )}
           </div>
 
-          {/* Manage subscription link for existing customers */}
-          {user && (
-            <div className="text-center mt-4">
-              <button
-                onClick={handleManageSubscription}
-                className="text-white/80 hover:text-white text-sm underline font-bold"
-              >
-                Already subscribed? Manage billing
-              </button>
-            </div>
-          )}
         </div>
       </div>
     </div>

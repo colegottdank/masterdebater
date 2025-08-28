@@ -17,9 +17,9 @@ export async function GET() {
     if (!priceId) {
       // Return fallback price if not configured
       return NextResponse.json({
-        amount: 499, // $4.99 in cents
+        amount: 2000, // $20.00 in cents
         currency: 'usd',
-        formatted: '$4.99',
+        formatted: '$20.00',
         interval: 'month',
         isFallback: true
       });
@@ -30,12 +30,12 @@ export async function GET() {
       const price = await stripe.prices.retrieve(priceId);
       
       const priceData = {
-        amount: price.unit_amount || 499,
+        amount: price.unit_amount || 2000,
         currency: price.currency,
         formatted: new Intl.NumberFormat('en-US', {
           style: 'currency',
           currency: price.currency.toUpperCase(),
-        }).format((price.unit_amount || 499) / 100),
+        }).format((price.unit_amount || 2000) / 100),
         interval: price.recurring?.interval || 'month',
         isFallback: false
       };
@@ -52,9 +52,9 @@ export async function GET() {
       
       // Return fallback price if Stripe fails
       return NextResponse.json({
-        amount: 499,
+        amount: 2000,
         currency: 'usd',
-        formatted: '$4.99',
+        formatted: '$20.00',
         interval: 'month',
         isFallback: true,
         error: 'Using fallback price'
@@ -63,9 +63,9 @@ export async function GET() {
   } catch (error: any) {
     console.error('Price endpoint error:', error);
     return NextResponse.json({
-      amount: 499,
+      amount: 2000,
       currency: 'usd',
-      formatted: '$4.99',
+      formatted: '$20.00',
       interval: 'month',
       isFallback: true,
       error: error.message
