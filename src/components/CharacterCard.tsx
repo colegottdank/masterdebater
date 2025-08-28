@@ -75,7 +75,7 @@ const CharacterCard: React.FC<CharacterCardProps> = ({
           
           {/* Speech Bubble on Hover */}
           <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-50 pointer-events-none">
-            <div className="bg-white text-black text-sm font-bold p-3 rounded-lg border-2 border-black whitespace-nowrap">
+            <div className="bg-white text-black text-xs sm:text-sm font-bold p-2 sm:p-3 rounded-lg border-2 border-black max-w-[200px] sm:max-w-none sm:whitespace-nowrap text-center">
               {character.quote}
               <div className="absolute top-full left-1/2 transform -translate-x-1/2">
                 <div className="w-0 h-0 border-l-8 border-r-8 border-t-8 border-transparent border-t-black"></div>
@@ -102,7 +102,7 @@ const CharacterCard: React.FC<CharacterCardProps> = ({
           
           {/* Speech Bubble on Hover */}
           <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-50 pointer-events-none">
-            <div className="bg-white text-black text-sm font-bold p-3 rounded-lg border-2 border-black whitespace-nowrap">
+            <div className="bg-white text-black text-xs sm:text-sm font-bold p-2 sm:p-3 rounded-lg border-2 border-black max-w-[200px] sm:max-w-none sm:whitespace-nowrap text-center">
               {character.quote}
               <div className="absolute top-full left-1/2 transform -translate-x-1/2">
                 <div className="w-0 h-0 border-l-8 border-r-8 border-t-8 border-transparent border-t-black"></div>
