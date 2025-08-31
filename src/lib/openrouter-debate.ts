@@ -117,7 +117,6 @@ export async function generateDebateResponseStream(
     temperature: 0.8,
     stream: true,
     // OpenRouter native fallback configuration
-    // @ts-expect-error - OpenRouter supports extra_body but types don't reflect it
     extra_body: {
       models: [
         "meta-llama/llama-3.3-8b-instruct:free",  // Try free model first
@@ -170,7 +169,6 @@ export async function generateDebateResponse(
     max_tokens: 150,
     temperature: 0.8,
     // OpenRouter native fallback configuration
-    // @ts-expect-error - OpenRouter supports extra_body but types don't reflect it
     extra_body: {
       models: [
         "meta-llama/llama-3.3-8b-instruct:free",  // Try free model first
