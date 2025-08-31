@@ -43,7 +43,8 @@ export async function generateDebateResponseStream(
   previousMessages: Array<{ role: string; content: string }>,
   userId?: string,
   debateId?: string,
-  isPremium: boolean = false
+  isPremium: boolean = false,
+  userEmail?: string
 ) {
   const systemPrompt = CHARACTER_PROMPTS[character];
 
@@ -89,7 +90,7 @@ export async function generateDebateResponseStream(
     baseURL: "https://openrouter.helicone.ai/api/v1",
     apiKey: process.env.OPENROUTER_API_KEY || "",
     defaultHeaders: {
-      ...getHeliconeHeaders(userId, isPremium, {
+      ...getHeliconeHeaders(userEmail || userId, isPremium, {
         character,
         topic,
         debateId,
@@ -134,7 +135,8 @@ export async function generateDebateResponse(
   previousMessages: Array<{ role: string; content: string }>,
   userId?: string,
   debateId?: string,
-  isPremium: boolean = false
+  isPremium: boolean = false,
+  userEmail?: string
 ) {
   const systemPrompt = CHARACTER_PROMPTS[character];
 
@@ -143,7 +145,7 @@ export async function generateDebateResponse(
     baseURL: "https://openrouter.helicone.ai/api/v1",
     apiKey: process.env.OPENROUTER_API_KEY || "",
     defaultHeaders: {
-      ...getHeliconeHeaders(userId, isPremium, {
+      ...getHeliconeHeaders(userEmail || userId, isPremium, {
         character,
         topic,
         debateId,

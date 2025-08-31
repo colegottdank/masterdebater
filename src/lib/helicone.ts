@@ -3,7 +3,7 @@
  */
 
 export function getHeliconeHeaders(
-  userId: string | undefined,
+  userIdOrEmail: string | undefined,
   isPremium: boolean,
   metadata?: {
     character?: string;
@@ -22,7 +22,7 @@ export function getHeliconeHeaders(
 
   const headers: Record<string, string> = {
     'Helicone-Auth': `Bearer ${process.env.HELICONE_API_KEY}`,
-    'Helicone-User-Id': userId || 'anonymous',
+    'Helicone-User-Id': userIdOrEmail || 'anonymous',
     'Helicone-RateLimit-Policy': rateLimitPolicy,
   };
 

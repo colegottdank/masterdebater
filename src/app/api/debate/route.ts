@@ -32,6 +32,10 @@ export async function POST(request: Request) {
       }
     }
 
+    // Get user email for Helicone tracking
+    const clerkUser = await currentUser();
+    const userEmail = clerkUser?.emailAddresses?.[0]?.emailAddress;
+    
     // Check if user is premium for rate limiting
     const user = userId ? await d1.getUser(userId) : null;
     const isPremium = user?.subscription_status === 'active';
@@ -45,7 +49,8 @@ export async function POST(request: Request) {
         previousMessages || [],
         userId,
         debateId,
-        isPremium
+        isPremium,
+        userEmail
       );
 
       const encoder = new TextEncoder();
@@ -54,7 +59,7 @@ export async function POST(request: Request) {
       const readable = new ReadableStream({
         async start(controller) {
           try {
-            for await (const chunk of debateStream) {
+            for await (const chunk of debateStream as any) {
               // OpenRouter uses different chunk format
               if (chunk.choices?.[0]?.delta?.content) {
                 const text = chunk.choices[0].delta.content;
@@ -152,7 +157,8 @@ export async function POST(request: Request) {
       previousMessages || [],
       userId,
       debateId,
-      isPremium
+      isPremium,
+      userEmail
     );
 
     return NextResponse.json({ response });

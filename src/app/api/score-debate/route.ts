@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 import { d1 } from "@/lib/d1";
-import { auth } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { getHeliconeHeaders } from "@/lib/helicone";
 
 // Note: We create OpenRouter clients per-request with user-specific headers now
@@ -28,6 +28,8 @@ RESPONSE FORMAT (JSON):
 
 export async function POST(request: NextRequest) {
   const { userId } = await auth();
+  const clerkUser = await currentUser();
+  const userEmail = clerkUser?.emailAddresses?.[0]?.emailAddress;
   const { messages, characterName, debateId } = await request.json();
 
   try {
@@ -67,7 +69,7 @@ export async function POST(request: NextRequest) {
       baseURL: "https://openrouter.helicone.ai/api/v1",
       apiKey: process.env.OPENROUTER_API_KEY || "",
       defaultHeaders: {
-        ...getHeliconeHeaders(userId || undefined, isPremium, {
+        ...getHeliconeHeaders(userEmail || userId || undefined, isPremium, {
           character: characterName,
           debateId,
           purpose: "scoring",
