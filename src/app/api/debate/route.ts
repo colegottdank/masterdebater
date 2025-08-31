@@ -4,6 +4,7 @@ import { generateDebateResponseStream, generateDebateResponse, Character } from 
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { d1 } from '@/lib/d1';
 import { getClientIp, checkRateLimit, isIpBlocked } from '@/lib/rate-limit';
+import { validateArgument, validateCharacter, validateTopic } from '@/lib/validation';
 
 export async function POST(request: NextRequest) {
   try {
@@ -27,6 +28,25 @@ export async function POST(request: NextRequest) {
     if (!character || !topic || !userArgument) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
+
+    // Validate and sanitize inputs
+    if (!validateCharacter(character)) {
+      return NextResponse.json({ error: 'Invalid character selected' }, { status: 400 });
+    }
+
+    const topicValidation = validateTopic(topic);
+    if (!topicValidation.valid) {
+      return NextResponse.json({ error: topicValidation.error }, { status: 400 });
+    }
+
+    const argumentValidation = validateArgument(userArgument);
+    if (!argumentValidation.valid) {
+      return NextResponse.json({ error: argumentValidation.error }, { status: 400 });
+    }
+
+    // Use sanitized inputs
+    const sanitizedTopic = topicValidation.sanitized;
+    const sanitizedArgument = argumentValidation.sanitized;
 
     // Get user premium status early for IP rate limiting
     const user = userId ? await d1.getUser(userId) : null;
@@ -66,8 +86,8 @@ export async function POST(request: NextRequest) {
     if (stream) {
       const debateStream = await generateDebateResponseStream(
         character as Character,
-        topic,
-        userArgument,
+        sanitizedTopic,
+        sanitizedArgument,
         previousMessages || [],
         userId,
         debateId,
@@ -95,9 +115,9 @@ export async function POST(request: NextRequest) {
             // Send final message with debate ID if new debate
             let savedDebateId = debateId;
             
-            // Save or update debate
+            // Save or update debate with sanitized content
             const allMessages = [...(previousMessages || []), 
-              { role: 'user', content: userArgument }, 
+              { role: 'user', content: sanitizedArgument }, 
               { role: 'ai', content: fullResponse }
             ];
             
@@ -119,7 +139,7 @@ export async function POST(request: NextRequest) {
               const saveResult = await d1.saveDebate({
                 userId,
                 character,
-                topic,
+                topic: sanitizedTopic,
                 messages: allMessages,
                 debateId: extractedDebateId  // Use the ID from the URL
               });
@@ -136,7 +156,7 @@ export async function POST(request: NextRequest) {
               const saveResult = await d1.saveDebate({
                 userId,
                 character,
-                topic,
+                topic: sanitizedTopic,
                 messages: allMessages,
                 debateId: debateId  // Update the existing debate
               });
@@ -174,8 +194,8 @@ export async function POST(request: NextRequest) {
     // Fallback to non-streaming response
     const response = await generateDebateResponse(
       character as Character,
-      topic,
-      userArgument,
+      sanitizedTopic,
+      sanitizedArgument,
       previousMessages || [],
       userId,
       debateId,

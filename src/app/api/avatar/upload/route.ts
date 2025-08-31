@@ -1,14 +1,36 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { uploadAvatar } from '@/lib/r2';
 import { d1 } from '@/lib/d1';
+import { getClientIp, checkRateLimit } from '@/lib/rate-limit';
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const { userId } = await auth();
     
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Check IP rate limit for uploads (prevent abuse)
+    const clientIp = getClientIp(request);
+    const user = await d1.getUser(userId);
+    const isPremium = user?.subscription_status === 'active';
+    
+    // Limit uploads: 5 per hour for free, 20 per hour for premium
+    const uploadRateLimit = await checkRateLimit(
+      clientIp,
+      'createDebate', // Reuse debate creation bucket for uploads
+      isPremium
+    );
+    
+    if (!uploadRateLimit.allowed) {
+      const resetTime = new Date(uploadRateLimit.resetAt).toLocaleTimeString();
+      return NextResponse.json({ 
+        error: 'rate_limit_exceeded',
+        message: `Too many uploads. Try again after ${resetTime}`,
+        resetAt: uploadRateLimit.resetAt
+      }, { status: 429 });
     }
 
     // Get form data with the file

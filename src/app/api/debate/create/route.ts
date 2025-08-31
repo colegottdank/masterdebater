@@ -3,6 +3,7 @@ import { auth, currentUser } from '@clerk/nextjs/server';
 import { d1 } from '@/lib/d1';
 import { Character } from '@/lib/claude';
 import { getClientIp, checkRateLimit, isIpBlocked } from '@/lib/rate-limit';
+import { validateTopic, validateCharacter, validateDebateId } from '@/lib/validation';
 
 export async function POST(request: NextRequest) {
   try {
@@ -51,6 +52,20 @@ export async function POST(request: NextRequest) {
 
     if (!character || !topic || !debateId) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    // Validate inputs
+    if (!validateCharacter(character)) {
+      return NextResponse.json({ error: 'Invalid character selected' }, { status: 400 });
+    }
+
+    const topicValidation = validateTopic(topic);
+    if (!topicValidation.valid) {
+      return NextResponse.json({ error: topicValidation.error }, { status: 400 });
+    }
+
+    if (!validateDebateId(debateId)) {
+      return NextResponse.json({ error: 'Invalid debate ID format' }, { status: 400 });
     }
 
     // Get user info for the debate

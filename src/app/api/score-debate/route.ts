@@ -3,6 +3,7 @@ import OpenAI from "openai";
 import { d1 } from "@/lib/d1";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { getHeliconeHeaders } from "@/lib/helicone";
+import { getClientIp, checkRateLimit } from "@/lib/rate-limit";
 
 // Note: We create OpenRouter clients per-request with user-specific headers now
 
@@ -28,6 +29,36 @@ RESPONSE FORMAT (JSON):
 
 export async function POST(request: NextRequest) {
   const { userId } = await auth();
+  
+  // Require authentication to prevent abuse
+  if (!userId) {
+    return NextResponse.json(
+      { error: "Unauthorized - Sign in to score debates" },
+      { status: 401 }
+    );
+  }
+  
+  // Check IP rate limit for scoring (costs money!)
+  const clientIp = getClientIp(request);
+  const user = await d1.getUser(userId);
+  const isPremium = user?.subscription_status === 'active';
+  
+  // Limit scoring: 10 per hour for free, 50 per hour for premium
+  const scoreRateLimit = await checkRateLimit(
+    clientIp, 
+    'sendMessage', // Reuse message rate limit bucket
+    isPremium
+  );
+  
+  if (!scoreRateLimit.allowed) {
+    const resetTime = new Date(scoreRateLimit.resetAt).toLocaleTimeString();
+    return NextResponse.json({ 
+      error: 'rate_limit_exceeded',
+      message: `Too many scoring requests. Try again after ${resetTime}`,
+      resetAt: scoreRateLimit.resetAt
+    }, { status: 429 });
+  }
+  
   const clerkUser = await currentUser();
   const userEmail = clerkUser?.emailAddresses?.[0]?.emailAddress;
   const { messages, characterName, debateId } = await request.json();
