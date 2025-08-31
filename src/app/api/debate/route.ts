@@ -1,10 +1,11 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 // Switch to OpenRouter for free AI!
 import { generateDebateResponseStream, generateDebateResponse, Character } from '@/lib/openrouter-debate';
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { d1 } from '@/lib/d1';
+import { getClientIp, checkRateLimit, isIpBlocked } from '@/lib/rate-limit';
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const { userId } = await auth();
     
@@ -12,10 +13,35 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Check if IP is blocked
+    const clientIp = getClientIp(request);
+    if (await isIpBlocked(clientIp)) {
+      return NextResponse.json({ 
+        error: 'blocked',
+        message: 'Your IP has been temporarily blocked due to suspicious activity'
+      }, { status: 403 });
+    }
+
     const { character, topic, userArgument, previousMessages, stream, debateId } = await request.json();
 
     if (!character || !topic || !userArgument) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    // Get user premium status early for IP rate limiting
+    const user = userId ? await d1.getUser(userId) : null;
+    const isPremium = user?.subscription_status === 'active';
+
+    // Check IP-based rate limit for messages
+    const ipRateLimit = await checkRateLimit(clientIp, 'sendMessage', isPremium);
+    if (!ipRateLimit.allowed) {
+      const resetTime = new Date(ipRateLimit.resetAt).toLocaleTimeString();
+      return NextResponse.json({ 
+        error: 'ip_rate_limit_exceeded',
+        message: `Too many messages from your IP address. Try again after ${resetTime}`,
+        resetAt: ipRateLimit.resetAt,
+        upgrade_required: !isPremium
+      }, { status: 429 });
     }
 
     // Check message limit (now checks database for premium status)
@@ -35,10 +61,6 @@ export async function POST(request: Request) {
     // Get user email for Helicone tracking
     const clerkUser = await currentUser();
     const userEmail = clerkUser?.emailAddresses?.[0]?.emailAddress;
-    
-    // Check if user is premium for rate limiting
-    const user = userId ? await d1.getUser(userId) : null;
-    const isPremium = user?.subscription_status === 'active';
 
     // If streaming is requested
     if (stream) {

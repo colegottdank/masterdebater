@@ -14,10 +14,9 @@ export async function POST(request: NextRequest) {
   let event: Stripe.Event;
 
   try {
-    // Use local webhook secret in development (from stripe listen)
-    const localWebhookSecret = 'whsec_6073f6322105baf89ec9cd52d220afa9103727518b333c66a641f5ee5960a5ce';
+    // Use environment variable for webhook secret
     const webhookSecret = process.env.NODE_ENV === 'development' 
-      ? localWebhookSecret 
+      ? process.env.STRIPE_WEBHOOK_SECRET_DEV 
       : process.env.STRIPE_WEBHOOK_SECRET;
     
     if (webhookSecret) {
