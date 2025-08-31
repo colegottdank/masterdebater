@@ -1,8 +1,8 @@
 import OpenAI from "openai";
-import { getHeliconeHeaders } from './helicone';
-import { searchForContext, shouldSearchForTopic } from './search';
+import { getHeliconeHeaders } from "./helicone";
+import { searchForContext, shouldSearchForTopic } from "./search";
 
-export type Character = 'cartman' | 'kyle' | 'stan' | 'butters' | 'clyde';
+export type Character = "cartman" | "kyle" | "stan" | "butters" | "clyde";
 
 export const CHARACTER_PROMPTS: Record<Character, string> = {
   cartman: `You are Eric Cartman from South Park, ACTIVELY DEBATING a human opponent right now!
@@ -33,7 +33,7 @@ This is a LIVE DEBATE - be innocent but surprisingly sharp!`,
 KEEP RESPONSES UNDER 60 WORDS! You're the ORIGINAL master debater who started the podcast to make money ("getting that nut").
 You're bitter that Cartman stole your show. Say things like "I was here first!" "This is MY thing!" "I need that $60!"
 Be resentful but still try to win debates. You started this whole trend!
-This is a LIVE DEBATE - prove you're the original!`
+This is a LIVE DEBATE - prove you're the original!`,
 };
 
 export async function generateDebateResponseStream(
@@ -46,43 +46,44 @@ export async function generateDebateResponseStream(
   isPremium: boolean = false
 ) {
   const systemPrompt = CHARACTER_PROMPTS[character];
-  
+
   // Get search context if topic is current events related
-  let searchContext = '';
+  let searchContext = "";
   if (shouldSearchForTopic(topic)) {
-    searchContext = await searchForContext(topic + ' ' + userArgument);
+    searchContext = await searchForContext(topic + " " + userArgument);
   }
-  
+
   // Get recent AI responses to avoid repetition
   const recentAIMessages = previousMessages
-    .filter(m => m.role === 'ai')
+    .filter((m) => m.role === "ai")
     .slice(-2)
-    .map(m => m.content)
-    .join(' ');
-  
-  const turnNumber = Math.floor(previousMessages.filter(m => m.role === 'user').length) + 1;
-  
+    .map((m) => m.content)
+    .join(" ");
+
+  const turnNumber =
+    Math.floor(previousMessages.filter((m) => m.role === "user").length) + 1;
+
   // Build context-aware prompt with episode context
   let contextualPrompt = `LIVE PODCAST DEBATE TURN #${turnNumber}! Topic: "${topic}". You are DEBATING against their argument: "${userArgument}".`;
-  
+
   // Add episode-specific context
   contextualPrompt += ` CONTEXT: You're podcasting to "get that nut" ($60/week). `;
-  if (character === 'cartman') {
+  if (character === "cartman") {
     contextualPrompt += `You STOLE Clyde's show and want the Charlie Kirk Award. `;
-  } else if (character === 'clyde') {
+  } else if (character === "clyde") {
     contextualPrompt += `Cartman STOLE your podcast! You started this whole thing! `;
   }
-  
+
   if (searchContext) {
     contextualPrompt += ` Current events: "${searchContext}".`;
   }
-  
+
   if (recentAIMessages) {
     contextualPrompt += ` DON'T repeat these previous responses: "${recentAIMessages}".`;
   }
-  
+
   contextualPrompt += ` COUNTER-ATTACK their specific argument. Be ${character}. Under 60 words. Make it personal and aggressive! Reference getting that nut/podcast drama when relevant!`;
-  
+
   // Create OpenRouter client with Helicone headers
   const openrouter = new OpenAI({
     baseURL: "https://openrouter.helicone.ai/api/v1",
@@ -94,27 +95,36 @@ export async function generateDebateResponseStream(
         debateId,
         turnNumber,
       }),
-      "HTTP-Referer": process.env.NEXT_PUBLIC_APP_URL || "https://masterdebater.ai",
+      "HTTP-Referer":
+        process.env.NEXT_PUBLIC_APP_URL || "https://masterdebater.ai",
       "X-Title": "MasterDebater.ai",
     },
   });
-  
+
   return openrouter.chat.completions.create({
-    model: "google/gemini-2.0-flash-exp:free",  // FREE and fast!
+    model: "meta-llama/llama-3.3-8b-instruct:free", // Primary model (FREE)
     messages: [
-      { 
-        role: "system", 
-        content: systemPrompt 
+      {
+        role: "system",
+        content: systemPrompt,
       },
-      { 
-        role: "user", 
-        content: contextualPrompt 
-      }
+      {
+        role: "user",
+        content: contextualPrompt,
+      },
     ],
     max_tokens: 120,
     temperature: 0.8,
     stream: true,
-  });
+    // OpenRouter native fallback configuration
+    // @ts-expect-error - OpenRouter supports extra_body but types don't reflect it
+    extra_body: {
+      models: [
+        "meta-llama/llama-3.3-8b-instruct:free",  // Try free model first
+        "google/gemini-2.5-flash-lite"             // Fallback to cheap Gemini
+      ]
+    }
+  } as any);
 }
 
 // Non-streaming version for fallback
@@ -128,7 +138,7 @@ export async function generateDebateResponse(
   isPremium: boolean = false
 ) {
   const systemPrompt = CHARACTER_PROMPTS[character];
-  
+
   // Create OpenRouter client with Helicone headers
   const openrouter = new OpenAI({
     baseURL: "https://openrouter.helicone.ai/api/v1",
@@ -139,26 +149,35 @@ export async function generateDebateResponse(
         topic,
         debateId,
       }),
-      "HTTP-Referer": process.env.NEXT_PUBLIC_APP_URL || "https://masterdebater.ai",
+      "HTTP-Referer":
+        process.env.NEXT_PUBLIC_APP_URL || "https://masterdebater.ai",
       "X-Title": "MasterDebater.ai",
     },
   });
-  
+
   const response = await openrouter.chat.completions.create({
-    model: "google/gemini-2.0-flash-exp:free",  // FREE and fast!
+    model: "meta-llama/llama-3.3-8b-instruct:free", // Primary model (FREE)
     messages: [
-      { 
-        role: "system", 
-        content: systemPrompt 
+      {
+        role: "system",
+        content: systemPrompt,
       },
-      { 
-        role: "user", 
-        content: `Debate topic: "${topic}". User argued: "${userArgument}". Respond as ${character} with a punchy comeback under 75 words. Be entertaining and stay in character!` 
-      }
+      {
+        role: "user",
+        content: `Debate topic: "${topic}". User argued: "${userArgument}". Respond as ${character} with a punchy comeback under 75 words. Be entertaining and stay in character!`,
+      },
     ],
     max_tokens: 150,
     temperature: 0.8,
-  });
+    // OpenRouter native fallback configuration
+    // @ts-expect-error - OpenRouter supports extra_body but types don't reflect it
+    extra_body: {
+      models: [
+        "meta-llama/llama-3.3-8b-instruct:free",  // Try free model first
+        "google/gemini-2.5-flash-lite"             // Fallback to cheap Gemini
+      ]
+    }
+  } as any);
 
-  return response.choices[0]?.message?.content || '';
+  return response.choices[0]?.message?.content || "";
 }

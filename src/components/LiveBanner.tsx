@@ -12,10 +12,12 @@ const LiveBanner: React.FC<LiveBannerProps> = ({
   onAirText = 'ON AIR' 
 }) => {
   return (
-    <div className="messy-banner p-2 text-center relative overflow-hidden">
-      <span className="font-black text-white text-xs sm:text-sm tracking-wider block truncate px-2">
-        {text}
-      </span>
+    <div className="messy-banner p-2 text-center relative">
+      <div className="overflow-hidden">
+        <span className="font-black text-white text-xs sm:text-sm tracking-wider block truncate px-2">
+          {text}
+        </span>
+      </div>
       {showOnAir && (
         <div className="absolute top-2 right-2 sm:right-20 z-10">
           <div className="on-air-sign text-sm">{onAirText}</div>

@@ -20,18 +20,18 @@ export default function Home() {
 
       {/* Navigation */}
       <SignedIn>
-        <nav className="absolute top-12 sm:top-16 right-2 sm:right-6 z-20 flex items-center gap-4">
-          <Link href="/history" className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl transition-all transform hover:-rotate-1 border-4 border-black shadow-lg">
-            📚 My Debates
+        <nav className="absolute top-12 sm:top-16 right-1 sm:right-6 z-20 flex items-center gap-2 sm:gap-4">
+          <Link href="/history" className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-1 px-2 sm:py-3 sm:px-6 rounded-lg sm:rounded-xl transition-all transform hover:-rotate-1 border-2 sm:border-4 border-black shadow-lg text-xs sm:text-base">
+            📚 <span className="hidden sm:inline">My Debates</span><span className="sm:hidden">Debates</span>
           </Link>
           <UserButton afterSignOutUrl="/" />
         </nav>
       </SignedIn>
       {/* Sign In button for signed out users */}
       <SignedOut>
-        <nav className="absolute top-12 sm:top-16 right-2 sm:right-6 z-20">
+        <nav className="absolute top-12 sm:top-16 right-1 sm:right-6 z-20">
           <SignInButton mode="modal">
-            <button className="bg-red-600 hover:bg-red-700 text-white font-bold py-1 px-3 sm:py-2 sm:px-6 rounded-lg transition-all transform hover:rotate-1 border-2 border-black text-sm">
+            <button className="bg-red-600 hover:bg-red-700 text-white font-bold py-1 px-2 sm:py-2 sm:px-6 rounded-lg transition-all transform hover:rotate-1 border-2 border-black text-xs sm:text-sm">
               Sign In
             </button>
           </SignInButton>

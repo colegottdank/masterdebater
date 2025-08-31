@@ -193,6 +193,7 @@ button {
   border: 3px solid #000;
   transform: rotate(-1deg);
   box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.3);
+  margin: 0 2px;
 }
 
 .messy-banner span {
