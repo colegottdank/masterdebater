@@ -69,8 +69,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Get user info for the debate
-    const user = await currentUser();
-    const username = user?.firstName || user?.username || 'Anonymous';
+    const clerkUser = await currentUser();
+    const username = clerkUser?.firstName || clerkUser?.username || 'Anonymous';
 
     // Create initial debate with welcome message
     const initialMessages = [{
