@@ -103,7 +103,7 @@ export async function generateDebateResponseStream(
   });
 
   return openrouter.chat.completions.create({
-    model: "gemini-2.0-flash-lite", // Gemini 2.0 Flash Lite - extremely cheap and fast
+    model: "gpt-5-nano", // Gemini 2.0 Flash Lite - extremely cheap and fast
     messages: [
       {
         role: "system",
@@ -150,7 +150,7 @@ export async function generateDebateResponse(
   });
 
   const response = await openrouter.chat.completions.create({
-    model: "gemini-2.0-flash-lite", // Gemini 2.0 Flash Lite - extremely cheap and fast
+    model: "gpt-5-nano", // Gemini 2.0 Flash Lite - extremely cheap and fast
     messages: [
       {
         role: "system",
