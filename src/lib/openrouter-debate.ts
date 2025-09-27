@@ -85,10 +85,10 @@ export async function generateDebateResponseStream(
 
   contextualPrompt += ` COUNTER-ATTACK their specific argument. Be ${character}. Under 60 words. Make it personal and aggressive! Reference getting that nut/podcast drama when relevant!`;
 
-  // Create OpenRouter client with Helicone headers
+  // Create Helicone AI Gateway client
   const openrouter = new OpenAI({
-    baseURL: "https://openrouter.helicone.ai/api/v1",
-    apiKey: process.env.OPENROUTER_API_KEY || "",
+    baseURL: "https://ai-gateway.helicone.ai",
+    apiKey: process.env.HELICONE_API_KEY || "",
     defaultHeaders: {
       ...getHeliconeHeaders(userEmail || userId, isPremium, {
         character,
@@ -103,7 +103,7 @@ export async function generateDebateResponseStream(
   });
 
   return openrouter.chat.completions.create({
-    model: "meta-llama/llama-3.3-8b-instruct:free", // Primary model (FREE)
+    model: "gemini-2.0-flash-lite", // Gemini 2.0 Flash Lite - extremely cheap and fast
     messages: [
       {
         role: "system",
@@ -117,14 +117,7 @@ export async function generateDebateResponseStream(
     max_tokens: 120,
     temperature: 0.8,
     stream: true,
-    // OpenRouter native fallback configuration
-    extra_body: {
-      models: [
-        "meta-llama/llama-3.3-8b-instruct:free",  // Try free model first
-        "google/gemini-2.5-flash-lite"             // Fallback to cheap Gemini
-      ]
-    }
-  } as any);
+  });
 }
 
 // Non-streaming version for fallback
@@ -140,10 +133,10 @@ export async function generateDebateResponse(
 ) {
   const systemPrompt = CHARACTER_PROMPTS[character];
 
-  // Create OpenRouter client with Helicone headers
+  // Create Helicone AI Gateway client
   const openrouter = new OpenAI({
-    baseURL: "https://openrouter.helicone.ai/api/v1",
-    apiKey: process.env.OPENROUTER_API_KEY || "",
+    baseURL: "https://ai-gateway.helicone.ai",
+    apiKey: process.env.HELICONE_API_KEY || "",
     defaultHeaders: {
       ...getHeliconeHeaders(userEmail || userId, isPremium, {
         character,
@@ -157,7 +150,7 @@ export async function generateDebateResponse(
   });
 
   const response = await openrouter.chat.completions.create({
-    model: "meta-llama/llama-3.3-8b-instruct:free", // Primary model (FREE)
+    model: "gemini-2.0-flash-lite", // Gemini 2.0 Flash Lite - extremely cheap and fast
     messages: [
       {
         role: "system",
@@ -170,14 +163,7 @@ export async function generateDebateResponse(
     ],
     max_tokens: 150,
     temperature: 0.8,
-    // OpenRouter native fallback configuration
-    extra_body: {
-      models: [
-        "meta-llama/llama-3.3-8b-instruct:free",  // Try free model first
-        "google/gemini-2.5-flash-lite"             // Fallback to cheap Gemini
-      ]
-    }
-  } as any);
+  });
 
   return response.choices[0]?.message?.content || "";
 }
