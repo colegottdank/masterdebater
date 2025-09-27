@@ -95,10 +95,10 @@ export async function POST(request: NextRequest) {
     const user = userId ? await d1.getUser(userId) : null;
     const isPremium = user?.subscription_status === 'active';
 
-    // Create client with custom headers for scoring
+    // Create Helicone AI Gateway client for scoring
     const scoringClient = new OpenAI({
-      baseURL: "https://openrouter.helicone.ai/api/v1",
-      apiKey: process.env.OPENROUTER_API_KEY || "",
+      baseURL: "https://ai-gateway.helicone.ai",
+      apiKey: process.env.HELICONE_API_KEY || "",
       defaultHeaders: {
         ...getHeliconeHeaders(userEmail || userId || undefined, isPremium, {
           character: characterName,
@@ -110,9 +110,9 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Use free Gemini 2.0 Flash model for scoring
+    // Use Gemini 2.0 Flash Lite for scoring - extremely cheap
     const response = await scoringClient.chat.completions.create({
-      model: "google/gemini-2.0-flash-exp:free",
+      model: "gemini-2.0-flash-lite",
       messages: [
         {
           role: "system",
