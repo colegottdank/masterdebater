@@ -89,35 +89,39 @@ export async function generateDebateResponseStream(
   const openrouter = new OpenAI({
     baseURL: "https://ai-gateway.helicone.ai",
     apiKey: process.env.HELICONE_API_KEY || "",
-    defaultHeaders: {
-      ...getHeliconeHeaders(userEmail || userId, isPremium, {
-        character,
-        topic,
-        debateId,
-        turnNumber,
-      }),
-      "HTTP-Referer":
-        process.env.NEXT_PUBLIC_APP_URL || "https://masterdebater.ai",
-      "X-Title": "MasterDebater.ai",
-    },
   });
 
-  return openrouter.chat.completions.create({
-    model: "gpt-4.1-nano", // Gemini 2.0 Flash Lite - extremely cheap and fast
-    messages: [
-      {
-        role: "system",
-        content: systemPrompt,
+  return openrouter.chat.completions.create(
+    {
+      model: "gpt-4.1-nano", // Gemini 2.0 Flash Lite - extremely cheap and fast
+      messages: [
+        {
+          role: "system",
+          content: systemPrompt,
+        },
+        {
+          role: "user",
+          content: contextualPrompt,
+        },
+      ],
+      max_tokens: 120,
+      temperature: 0.8,
+      stream: true,
+    },
+    {
+      headers: {
+        ...getHeliconeHeaders(userEmail || userId, isPremium, {
+          character,
+          topic,
+          debateId,
+          turnNumber,
+        }),
+        "HTTP-Referer":
+          process.env.NEXT_PUBLIC_APP_URL || "https://masterdebater.ai",
+        "X-Title": "MasterDebater.ai",
       },
-      {
-        role: "user",
-        content: contextualPrompt,
-      },
-    ],
-    max_tokens: 120,
-    temperature: 0.8,
-    stream: true,
-  });
+    }
+  );
 }
 
 // Non-streaming version for fallback
@@ -137,33 +141,37 @@ export async function generateDebateResponse(
   const openrouter = new OpenAI({
     baseURL: "https://ai-gateway.helicone.ai",
     apiKey: process.env.HELICONE_API_KEY || "",
-    defaultHeaders: {
-      ...getHeliconeHeaders(userEmail || userId, isPremium, {
-        character,
-        topic,
-        debateId,
-      }),
-      "HTTP-Referer":
-        process.env.NEXT_PUBLIC_APP_URL || "https://masterdebater.ai",
-      "X-Title": "MasterDebater.ai",
-    },
   });
 
-  const response = await openrouter.chat.completions.create({
-    model: "gpt-4.1-nano", // Gemini 2.0 Flash Lite - extremely cheap and fast
-    messages: [
-      {
-        role: "system",
-        content: systemPrompt,
+  const response = await openrouter.chat.completions.create(
+    {
+      model: "gpt-4.1-nano", // Gemini 2.0 Flash Lite - extremely cheap and fast
+      messages: [
+        {
+          role: "system",
+          content: systemPrompt,
+        },
+        {
+          role: "user",
+          content: `Debate topic: "${topic}". User argued: "${userArgument}". Respond as ${character} with a punchy comeback under 75 words. Be entertaining and stay in character!`,
+        },
+      ],
+      max_tokens: 150,
+      temperature: 0.8,
+    },
+    {
+      headers: {
+        ...getHeliconeHeaders(userEmail || userId, isPremium, {
+          character,
+          topic,
+          debateId,
+        }),
+        "HTTP-Referer":
+          process.env.NEXT_PUBLIC_APP_URL || "https://masterdebater.ai",
+        "X-Title": "MasterDebater.ai",
       },
-      {
-        role: "user",
-        content: `Debate topic: "${topic}". User argued: "${userArgument}". Respond as ${character} with a punchy comeback under 75 words. Be entertaining and stay in character!`,
-      },
-    ],
-    max_tokens: 150,
-    temperature: 0.8,
-  });
+    }
+  );
 
   return response.choices[0]?.message?.content || "";
 }
