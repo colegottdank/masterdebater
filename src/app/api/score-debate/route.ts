@@ -29,7 +29,7 @@ RESPONSE FORMAT (JSON):
 
 export async function POST(request: NextRequest) {
   const { userId } = await auth();
-  
+
   // Require authentication to prevent abuse
   if (!userId) {
     return NextResponse.json(
@@ -37,28 +37,31 @@ export async function POST(request: NextRequest) {
       { status: 401 }
     );
   }
-  
+
   // Check IP rate limit for scoring (costs money!)
   const clientIp = getClientIp(request);
   const user = await d1.getUser(userId);
-  const isPremium = user?.subscription_status === 'active';
-  
+  const isPremium = user?.subscription_status === "active";
+
   // Limit scoring: 10 per hour for free, 50 per hour for premium
   const scoreRateLimit = await checkRateLimit(
-    clientIp, 
-    'sendMessage', // Reuse message rate limit bucket
+    clientIp,
+    "sendMessage", // Reuse message rate limit bucket
     isPremium
   );
-  
+
   if (!scoreRateLimit.allowed) {
     const resetTime = new Date(scoreRateLimit.resetAt).toLocaleTimeString();
-    return NextResponse.json({ 
-      error: 'rate_limit_exceeded',
-      message: `Too many scoring requests. Try again after ${resetTime}`,
-      resetAt: scoreRateLimit.resetAt
-    }, { status: 429 });
+    return NextResponse.json(
+      {
+        error: "rate_limit_exceeded",
+        message: `Too many scoring requests. Try again after ${resetTime}`,
+        resetAt: scoreRateLimit.resetAt,
+      },
+      { status: 429 }
+    );
   }
-  
+
   const clerkUser = await currentUser();
   const userEmail = clerkUser?.emailAddresses?.[0]?.emailAddress;
   const { messages, characterName, debateId } = await request.json();
@@ -93,26 +96,17 @@ export async function POST(request: NextRequest) {
 
     // Check if user is premium
     const user = userId ? await d1.getUser(userId) : null;
-    const isPremium = user?.subscription_status === 'active';
+    const isPremium = user?.subscription_status === "active";
 
     // Create Helicone AI Gateway client for scoring
     const scoringClient = new OpenAI({
       baseURL: "https://ai-gateway.helicone.ai",
       apiKey: process.env.HELICONE_API_KEY || "",
-      defaultHeaders: {
-        ...getHeliconeHeaders(userEmail || userId || undefined, isPremium, {
-          character: characterName,
-          debateId,
-          purpose: "scoring",
-        }),
-        "HTTP-Referer": process.env.NEXT_PUBLIC_APP_URL || "https://masterdebater.ai",
-        "X-Title": "MasterDebater.ai",
-      },
     });
 
     // Use Gemini 2.0 Flash Lite for scoring - extremely cheap
     const response = await scoringClient.chat.completions.create({
-      model: "gemini-2.0-flash-lite",
+      model: "gemini-2.5-flash-lite",
       messages: [
         {
           role: "system",

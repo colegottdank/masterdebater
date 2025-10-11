@@ -116,9 +116,6 @@ export async function generateDebateResponseStream(
           debateId,
           turnNumber,
         }),
-        "HTTP-Referer":
-          process.env.NEXT_PUBLIC_APP_URL || "https://masterdebater.ai",
-        "X-Title": "MasterDebater.ai",
       },
     }
   );

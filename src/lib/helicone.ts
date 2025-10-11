@@ -21,7 +21,6 @@ export function getHeliconeHeaders(
     : "10;w=86400;u=cents;s=user"; // $0.10/day for free users (backup)
 
   const headers: Record<string, string> = {
-    "Helicone-Auth": `Bearer ${process.env.HELICONE_API_KEY}`,
     "Helicone-User-Id": userIdOrEmail || "anonymous",
     "Helicone-RateLimit-Policy": rateLimitPolicy,
   };
