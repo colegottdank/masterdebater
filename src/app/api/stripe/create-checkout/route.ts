@@ -110,6 +110,7 @@ export async function POST(request: Request) {
         },
       ],
       mode: 'subscription',
+      allow_promotion_codes: true,
       success_url: `${origin}${returnUrl}${returnUrl.includes('?') ? '&' : '?'}upgraded=true`,
       cancel_url: `${origin}${returnUrl}${returnUrl.includes('?') ? '&' : '?'}canceled=true`,
       metadata: {
