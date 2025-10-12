@@ -5,6 +5,7 @@ const isPublicRoute = createRouteMatcher([
   '/sign-in(.*)',
   '/sign-up(.*)',
   '/api/webhook(.*)',
+  '/api/stripe/webhook',  // Allow Stripe webhooks
   '/api/stripe/health',  // Allow public health check
   '/api/stripe/price',   // Allow public price check
   '/api/stripe/test',    // Allow public test endpoint
