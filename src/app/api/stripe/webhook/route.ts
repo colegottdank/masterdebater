@@ -59,7 +59,12 @@ export async function POST(request: NextRequest) {
           );
           
           console.log('Updating user subscription for:', clerkUserId, 'with customer:', session.customer);
-          
+
+          // Safely convert period end timestamp
+          const periodEnd = (subscription as any).current_period_end
+            ? new Date((subscription as any).current_period_end * 1000).toISOString()
+            : undefined;
+
           // Save to database - ensure customer ID is saved
           const updateResult = await d1.upsertUser({
             clerkUserId,
@@ -67,7 +72,7 @@ export async function POST(request: NextRequest) {
             stripeSubscriptionId: subscription.id,
             stripePlan: 'premium',
             subscriptionStatus: 'active',
-            currentPeriodEnd: new Date((subscription as any).current_period_end * 1000).toISOString(),
+            currentPeriodEnd: periodEnd,
             cancelAtPeriodEnd: (subscription as any).cancel_at_period_end,
           });
           
@@ -83,22 +88,29 @@ export async function POST(request: NextRequest) {
         break;
       }
 
+      case 'customer.subscription.created':
       case 'customer.subscription.updated': {
         const subscription = event.data.object as Stripe.Subscription;
         const clerkUserId = subscription.metadata?.clerkUserId;
-        
+
+        console.log(`Subscription ${event.type} - clerkUserId:`, clerkUserId, 'subscription:', subscription.id, 'status:', subscription.status);
+
         if (clerkUserId) {
-          const periodEnd = (subscription as any).current_period_end 
+          const periodEnd = (subscription as any).current_period_end
             ? new Date((subscription as any).current_period_end * 1000).toISOString()
             : undefined;
-            
-          await d1.upsertUser({
+
+          const updateResult = await d1.upsertUser({
             clerkUserId,
+            stripeCustomerId: subscription.customer as string,
+            stripeSubscriptionId: subscription.id,
             subscriptionStatus: subscription.status,
             currentPeriodEnd: periodEnd,
             cancelAtPeriodEnd: subscription.cancel_at_period_end,
             stripePlan: subscription.status === 'active' ? 'premium' : undefined,
           });
+
+          console.log('Subscription update result:', updateResult);
         }
         break;
       }
