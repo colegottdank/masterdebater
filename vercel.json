@@ -1,0 +1,9 @@
+{
+  "framework": null,
+  "buildCommand": "",
+  "installCommand": "",
+  "outputDirectory": "public",
+  "redirects": [
+    { "source": "/(.*)", "destination": "https://www.debateai.org/", "permanent": true }
+  ]
+}
